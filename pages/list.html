@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>공공화장실 큐레이터 · 목록</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="app">
+
+  <header class="app-header">
+    <div class="brand-row">Restie</div>
+    <div class="header-row">
+      <button class="back-btn" type="button" onclick="history.length>1?history.back():location.href='../index.html'" aria-label="뒤로가기">←</button>
+      <span class="area-pill" id="area-pill">전체 지역 ⌄</span>
+      <form role="search" class="search-box" action="javascript:void(0)">
+        <label for="list-search" class="sr-only">공간명 검색</label>
+        <input id="list-search" type="search" placeholder="공간명 또는 지역 검색">
+      </form>
+    </div>
+    <div class="chip-row" id="filter-row">
+      <button class="chip" type="button" data-key="hasStepFree">턱없음</button>
+      <button class="chip" type="button" data-key="hasDiaperTable">기저귀교환대</button>
+      <button class="chip" type="button" data-key="hasBell">비상벨</button>
+      <button class="chip" type="button" data-key="hasAutoDoor">자동문</button>
+    </div>
+    <div class="result-row">
+      <span id="result-count">조건 0개 적용 · <b>-</b>곳</span>
+      <button class="text-btn" type="button" id="reset-btn">전체 해제</button>
+    </div>
+  </header>
+
+  <main class="content" id="content">
+    <button class="sort-btn" type="button" id="sort-btn">거리순 ▾</button>
+    <div class="card-list" id="card-list"></div>
+
+    <div class="state-block" id="empty-state" hidden>
+      <div class="state-icon">!</div>
+      <div class="state-title">조건에 맞는 화장실이 없습니다</div>
+      <div class="state-sub" id="empty-hint">조건을 해제하면 더 많은 결과를 볼 수 있어요</div>
+      <button class="btn-secondary" type="button" id="relax-btn">마지막 조건 해제</button>
+    </div>
+
+    <div class="state-block" id="error-state" hidden>
+      <div class="state-icon">⟳</div>
+      <div class="state-title">화장실 정보를 불러오지 못했습니다</div>
+      <div class="state-sub">네트워크 상태를 확인한 뒤 다시 시도해 주세요</div>
+      <button class="btn-secondary" type="button" id="retry-btn">다시 시도</button>
+    </div>
+  </main>
+
+  <nav class="app-tabbar" id="tabbar-root" aria-label="주요 메뉴"></nav>
+</div>
+
+<script src="../js/app.js"></script>
+<script>
+(async function () {
+  App.renderTabbar(document.getElementById("tabbar-root"), "list");
+
+  const params = new URLSearchParams(location.search);
+  const FILTER_KEYS = ["hasStepFree", "hasAutoDoor", "hasDiaperTable", "hasBell"];
+  const initialQuery = params.get("q") || "";
+
+  const activeFilters = new Set(FILTER_KEYS.filter((k) => params.get(k) === "1"));
+  document.querySelectorAll("#filter-row .chip").forEach((chip) => {
+    if (activeFilters.has(chip.dataset.key)) chip.classList.add("active");
+    chip.addEventListener("click", () => {
+      chip.classList.toggle("active");
+      if (chip.classList.contains("active")) activeFilters.add(chip.dataset.key);
+      else activeFilters.delete(chip.dataset.key);
+      render();
+    });
+  });
+
+  document.getElementById("list-search").value = initialQuery;
+  document.getElementById("list-search").addEventListener("input", render);
+
+  document.getElementById("reset-btn").addEventListener("click", () => {
+    activeFilters.clear();
+    document.querySelectorAll("#filter-row .chip").forEach((c) => c.classList.remove("active"));
+    render();
+  });
+
+  let sortMode = "distance"; // distance | closeTime
+  document.getElementById("sort-btn").addEventListener("click", () => {
+    sortMode = sortMode === "distance" ? "closeTime" : "distance";
+    document.getElementById("sort-btn").textContent =
+      (sortMode === "distance" ? "거리순" : "늦게까지 여는 순") + " ▾";
+    render();
+  });
+
+  let allToilets = [];
+  let lastAppliedKey = null;
+
+  async function init() {
+    try {
+      allToilets = await App.loadToilets();
+      document.getElementById("error-state").hidden = true;
+      render();
+    } catch (err) {
+      document.getElementById("error-state").hidden = false;
+      document.getElementById("card-list").innerHTML = "";
+      document.getElementById("empty-state").hidden = true;
+      console.error(err);
+    }
+  }
+  document.getElementById("retry-btn").addEventListener("click", init);
+
+  function render() {
+    const q = document.getElementById("list-search").value.trim().toLowerCase();
+    let list = allToilets.filter((t) => {
+      const matchQuery = !q || t.name.toLowerCase().includes(q) || t.area.toLowerCase().includes(q);
+      const matchFilters = [...activeFilters].every((key) => t[key]);
+      return matchQuery && matchFilters;
+    });
+
+    list = list.slice().sort((a, b) =>
+      sortMode === "distance" ? a.distanceM - b.distanceM : (b.closeTime > a.closeTime ? 1 : -1)
+    );
+
+    const cardList = document.getElementById("card-list");
+    const emptyState = document.getElementById("empty-state");
+    const countEl = document.getElementById("result-count");
+    countEl.innerHTML = `조건 ${activeFilters.size}개 적용 · <b>${list.length}곳</b>`;
+
+    if (activeFilters.size > 0) lastAppliedKey = [...activeFilters].pop();
+
+    if (list.length === 0) {
+      cardList.innerHTML = "";
+      emptyState.hidden = false;
+      const labelMap = { hasStepFree: "턱없음", hasDiaperTable: "기저귀교환대", hasBell: "비상벨", hasAutoDoor: "자동문" };
+      document.getElementById("empty-hint").textContent = lastAppliedKey
+        ? `"${labelMap[lastAppliedKey]}" 조건을 해제하면 더 많은 결과를 볼 수 있어요`
+        : "검색어나 조건을 바꿔보세요";
+      return;
+    }
+    emptyState.hidden = true;
+
+    cardList.innerHTML = list.map((t) => {
+      const fav = App.isFavorite(t.id);
+      const badges = App.badgesOf(t).slice(0, 3);
+      return `
+        <div class="toilet-card" style="align-items:center">
+          <a href="./detail.html?id=${t.id}" style="display:flex;gap:12px;flex:1;min-width:0;text-decoration:none;color:inherit">
+            <div class="thumb">이미지</div>
+            <div class="card-body">
+              <div class="card-name-row">
+                <span class="card-name">${t.name}</span>
+              </div>
+              <span class="card-dist">${t.area} · 도보 ${Math.round(t.distanceM / 70)}분</span>
+              <div class="badge-row">
+                ${badges.map((b) => `<span class="badge ok">${b}</span>`).join("")}
+              </div>
+            </div>
+          </a>
+          <button class="fav-toggle${fav ? " active" : ""}" type="button" data-id="${t.id}" aria-label="즐겨찾기 토글">${fav ? "★" : "☆"}</button>
+        </div>`;
+    }).join("");
+
+    cardList.querySelectorAll(".fav-toggle").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const active = App.toggleFavorite(btn.dataset.id);
+        btn.classList.toggle("active", active);
+        btn.textContent = active ? "★" : "☆";
+      });
+    });
+  }
+
+  document.getElementById("relax-btn").addEventListener("click", () => {
+    if (!lastAppliedKey) return;
+    activeFilters.delete(lastAppliedKey);
+    document.querySelector(`.chip[data-key="${lastAppliedKey}"]`)?.classList.remove("active");
+    lastAppliedKey = null;
+    render();
+  });
+
+  init();
+})();
+</script>
+</body>
+</html>
