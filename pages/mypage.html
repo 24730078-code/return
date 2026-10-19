@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>공공화장실 큐레이터 · 마이</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="app">
+
+  <header class="app-header">
+    <div class="brand-row">Restie</div>
+    <div class="header-row">
+      <span class="header-title" style="font-size:16px">마이</span>
+    </div>
+    <div class="subtab-row">
+      <button class="subtab active" type="button" data-tab="favorites">즐겨찾기 <span id="fav-count"></span></button>
+      <button class="subtab" type="button" data-tab="recent">최근 본 공간</button>
+    </div>
+  </header>
+
+  <main class="content" id="content">
+    <section class="account" id="account" aria-label="계정"></section>
+    <div class="card-list" id="card-list"></div>
+    <div class="state-block" id="empty-state" hidden>
+      <div class="state-icon" id="empty-icon">☆</div>
+      <div class="state-title" id="empty-title">저장한 공간이 없습니다</div>
+      <div class="state-sub" id="empty-sub">조건에 맞는 화장실을 찾아 저장하면 여기에서 다시 볼 수 있어요</div>
+      <a class="btn-secondary" href="../index.html">화장실 둘러보기</a>
+    </div>
+  </main>
+
+  <nav class="app-tabbar" id="tabbar-root" aria-label="주요 메뉴"></nav>
+</div>
+
+<script src="../js/app.js"></script>
+<script>
+(async function () {
+  App.renderTabbar(document.getElementById("tabbar-root"), "my");
+
+  /* ---------- 계정: 로그인 / 회원가입 ---------- */
+  const accountEl = document.getElementById("account");
+  let authMode = null; // null | "login" | "signup"
+
+  function renderAccount() {
+    const user = App.Auth.currentUser();
+    if (user) {
+      accountEl.innerHTML = `
+        <div class="account-card">
+          <div class="avatar" id="acc-avatar" aria-hidden="true"></div>
+          <div class="account-info">
+            <span class="account-name" id="acc-name"></span>
+            <span class="account-sub" id="acc-email"></span>
+          </div>
+          <button class="btn-secondary" type="button" data-auth="logout">로그아웃</button>
+        </div>`;
+      document.getElementById("acc-avatar").textContent = user.nickname.slice(0, 1);
+      document.getElementById("acc-name").textContent = user.nickname + "님";
+      document.getElementById("acc-email").textContent = user.email;
+      return;
+    }
+    if (!authMode) {
+      accountEl.innerHTML = `
+        <div class="account-card guest">
+          <div class="account-info">
+            <span class="account-name">로그인이 필요해요</span>
+            <span class="account-sub">로그인하고 내 계정으로 Restie를 이용해 보세요</span>
+          </div>
+          <div class="account-actions">
+            <button class="btn-secondary" type="button" data-auth="login">로그인</button>
+            <button class="btn-secondary primary" type="button" data-auth="signup">회원가입</button>
+          </div>
+        </div>`;
+      return;
+    }
+    const signup = authMode === "signup";
+    accountEl.innerHTML = `
+      <form class="auth-card" id="auth-form" novalidate>
+        <div class="auth-tabs" role="tablist">
+          <button class="auth-tab${signup ? "" : " active"}" type="button" role="tab" aria-selected="${!signup}" data-auth="login">로그인</button>
+          <button class="auth-tab${signup ? " active" : ""}" type="button" role="tab" aria-selected="${signup}" data-auth="signup">회원가입</button>
+        </div>
+        ${signup ? `<label class="field"><span>닉네임 (2~12자)</span><input name="nickname" maxlength="12" autocomplete="nickname"></label>` : ""}
+        <label class="field"><span>이메일</span><input name="email" type="email" autocomplete="email" inputmode="email"></label>
+        <label class="field"><span>비밀번호${signup ? " (8자 이상)" : ""}</span><input name="password" type="password" autocomplete="${signup ? "new-password" : "current-password"}"></label>
+        ${signup ? `<label class="field"><span>비밀번호 확인</span><input name="confirm" type="password" autocomplete="new-password"></label>` : ""}
+        <p class="form-error" id="auth-error" role="alert" hidden></p>
+        <button class="btn-primary" type="submit">${signup ? "가입하기" : "로그인"}</button>
+        <button class="text-btn" type="button" data-auth="close">닫기</button>
+      </form>`;
+    accountEl.querySelector("input").focus();
+  }
+
+  accountEl.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-auth]");
+    if (!btn) return;
+    const act = btn.dataset.auth;
+    if (act === "logout") { App.Auth.logout(); authMode = null; }
+    else if (act === "close") authMode = null;
+    else authMode = act;
+    renderAccount();
+  });
+
+  accountEl.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const errEl = document.getElementById("auth-error");
+    const submit = form.querySelector('button[type="submit"]');
+    const v = Object.fromEntries(new FormData(form));
+    submit.disabled = true;
+    const res = authMode === "signup" ? await App.Auth.signup(v) : await App.Auth.login(v);
+    submit.disabled = false;
+    if (!res.ok) { errEl.textContent = res.error; errEl.hidden = false; return; }
+    authMode = null;
+    renderAccount();
+  });
+
+  renderAccount();
+
+  const params = new URLSearchParams(location.search);
+  let activeTab = params.get("tab") === "recent" ? "recent" : "favorites";
+
+  document.querySelectorAll(".subtab").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      activeTab = btn.dataset.tab;
+      document.querySelectorAll(".subtab").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      render();
+    });
+  });
+  document.querySelector(`.subtab[data-tab="${activeTab}"]`).classList.add("active");
+  document.querySelector(`.subtab[data-tab="${activeTab === "favorites" ? "recent" : "favorites"}"]`).classList.remove("active");
+
+  let toilets = [];
+  try {
+    toilets = await App.loadToilets();
+  } catch (err) {
+    document.getElementById("card-list").innerHTML = "";
+    document.getElementById("empty-state").hidden = false;
+    document.getElementById("empty-icon").textContent = "⟳";
+    document.getElementById("empty-title").textContent = "정보를 불러오지 못했습니다";
+    document.getElementById("empty-sub").textContent = "네트워크 상태를 확인한 뒤 새로고침해 주세요";
+    console.error(err);
+    return;
+  }
+
+  function render() {
+    const cardList = document.getElementById("card-list");
+    const emptyState = document.getElementById("empty-state");
+    const favIds = App.getFavorites();
+    document.getElementById("fav-count").textContent = favIds.length;
+
+    let items = [];
+    if (activeTab === "favorites") {
+      items = favIds.map((id) => ({ t: toilets.find((x) => x.id === id), sub: null })).filter((x) => x.t);
+    } else {
+      items = App.getRecent()
+        .map((r) => ({ t: toilets.find((x) => x.id === r.id), sub: App.relativeTime(r.viewedAt) }))
+        .filter((x) => x.t);
+    }
+
+    if (items.length === 0) {
+      cardList.innerHTML = "";
+      emptyState.hidden = false;
+      document.getElementById("empty-icon").textContent = activeTab === "favorites" ? "☆" : "🕘";
+      document.getElementById("empty-title").textContent =
+        activeTab === "favorites" ? "저장한 공간이 없습니다" : "최근 확인한 공간이 없습니다";
+      document.getElementById("empty-sub").textContent =
+        activeTab === "favorites"
+          ? "조건에 맞는 화장실을 찾아 저장하면 여기에서 다시 볼 수 있어요"
+          : "화장실 상세를 확인하면 이곳에 자동으로 기록돼요";
+      return;
+    }
+    emptyState.hidden = true;
+
+    cardList.innerHTML = items.map(({ t, sub }) => {
+      const fav = App.isFavorite(t.id);
+      const badges = App.badgesOf(t).slice(0, 3);
+      return `
+        <div class="toilet-card" style="align-items:center">
+          <a href="./detail.html?id=${t.id}" style="display:flex;gap:12px;flex:1;min-width:0;text-decoration:none;color:inherit">
+            <div class="thumb">이미지</div>
+            <div class="card-body">
+              <span class="card-name">${t.name}</span>
+              <span class="card-dist">${sub || t.area}</span>
+              <div class="badge-row">${badges.map((b) => `<span class="badge ok">${b}</span>`).join("")}</div>
+            </div>
+          </a>
+          ${activeTab === "favorites"
+            ? `<button class="fav-toggle active" type="button" data-id="${t.id}" aria-label="즐겨찾기 해제">★</button>`
+            : ""}
+        </div>`;
+    }).join("");
+
+    if (activeTab === "favorites") {
+      cardList.querySelectorAll(".fav-toggle").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          App.toggleFavorite(btn.dataset.id);
+          render();
+        });
+      });
+    }
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>

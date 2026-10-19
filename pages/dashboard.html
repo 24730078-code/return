@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>공공화장실 큐레이터 · 대시보드</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="app">
+
+  <header class="app-header">
+    <div class="brand-row">Restie</div>
+    <div class="header-row">
+      <span class="header-title" style="font-size:16px">대시보드</span>
+    </div>
+  </header>
+
+  <main class="content" id="content">
+    <section>
+      <div class="section-title">전국 공공화장실 현황</div>
+      <span class="dash-updated" id="updated-at">기준일 -</span>
+    </section>
+
+    <div class="dash-total">
+      <div class="num" id="total-count">-</div>
+      <div class="lbl">등록된 공공화장실 (현재 샘플 데이터 기준)</div>
+    </div>
+
+    <div class="dash-grid">
+      <a class="dash-card" href="./list.html?hasStepFree=1" style="color:inherit">
+        <div class="icon">♿</div>
+        <div class="num" id="count-stepfree">-</div>
+        <div class="lbl">무장애</div>
+      </a>
+      <a class="dash-card" href="./list.html?hasDiaperTable=1" style="color:inherit">
+        <div class="icon">👶</div>
+        <div class="num" id="count-diaper">-</div>
+        <div class="lbl">기저귀교환대</div>
+      </a>
+      <a class="dash-card" href="./list.html?hasBell=1" style="color:inherit">
+        <div class="icon">🔔</div>
+        <div class="num" id="count-bell">-</div>
+        <div class="lbl">비상벨</div>
+      </a>
+    </div>
+
+    <section>
+      <div class="section-title">지역별 무장애 화장실</div>
+      <div class="bar-chart" id="bar-chart" style="margin-top:10px"></div>
+    </section>
+
+    <section>
+      <div class="section-title">내 지역 요약</div>
+      <a class="dash-region" id="region-summary" href="./list.html">
+        <span id="region-name">지역 선택 안 됨</span>
+        <span class="num" id="region-count">-</span>
+      </a>
+    </section>
+
+    <div class="state-block" id="error-state" hidden>
+      <div class="state-icon">⟳</div>
+      <div class="state-title">통계를 불러오지 못했습니다</div>
+      <div class="state-sub">네트워크 상태를 확인한 뒤 다시 시도해 주세요</div>
+      <button class="btn-secondary" type="button" id="retry-btn">다시 시도</button>
+    </div>
+  </main>
+
+  <nav class="app-tabbar" id="tabbar-root" aria-label="주요 메뉴"></nav>
+</div>
+
+<script src="../js/app.js"></script>
+<script>
+(async function () {
+  App.renderTabbar(document.getElementById("tabbar-root"), "dashboard");
+
+  async function init() {
+    try {
+      const toilets = await App.loadToilets();
+      document.getElementById("error-state").hidden = true;
+
+      document.getElementById("updated-at").textContent =
+        "기준일 " + new Date().toISOString().slice(0, 10).replaceAll("-", ".");
+      document.getElementById("total-count").textContent = toilets.length.toLocaleString() + "개";
+      document.getElementById("count-stepfree").textContent = App.countBy(toilets, "hasStepFree");
+      document.getElementById("count-diaper").textContent = App.countBy(toilets, "hasDiaperTable");
+      document.getElementById("count-bell").textContent = App.countBy(toilets, "hasBell");
+
+      const grouped = App.groupByArea(toilets);
+      const max = Math.max(1, ...grouped.map(([, n]) => n));
+      document.getElementById("bar-chart").innerHTML = grouped.map(([area, n]) => `
+        <div class="bar-row">
+          <div class="top"><span>${area}</span><span>${n}곳</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:${(n / max) * 100}%"></div></div>
+        </div>`).join("") || `<p class="state-sub" style="text-align:left">무장애 화장실 데이터가 없습니다</p>`;
+
+      const firstArea = toilets[0]?.area || "-";
+      const regionCount = toilets.filter((t) => t.area === firstArea).length;
+      document.getElementById("region-name").textContent = `${firstArea} · 전체 화장실`;
+      document.getElementById("region-count").textContent = regionCount + "곳";
+      document.getElementById("region-summary").href = `./list.html?q=${encodeURIComponent(firstArea)}`;
+    } catch (err) {
+      document.getElementById("error-state").hidden = false;
+      console.error(err);
+    }
+  }
+  document.getElementById("retry-btn").addEventListener("click", init);
+  init();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>공공화장실 큐레이터 · 홈</title>
+<link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+<div class="app home-app">
+
+  <main class="map-area full" id="map-area" data-sheet="closed" aria-label="주변 공공화장실 지도">
+
+    <div class="map-overlay-top">
+      <div class="search-row">
+        <form role="search" class="floating-search" action="javascript:void(0)" id="search-form">
+          <label for="home-search" class="sr-only">지역·화장실명 검색</label>
+          <span aria-hidden="true">🔍</span>
+          <input id="home-search" type="search" placeholder="지역 또는 화장실명 검색">
+        </form>
+      </div>
+
+      <div class="chip-scroll" id="type-chip-row">
+        <button class="chip active" type="button" data-key="">전체</button>
+        <button class="chip" type="button" data-key="hasStepFree">무장애</button>
+        <button class="chip" type="button" data-key="hasAutoDoor">자동문</button>
+        <button class="chip" type="button" data-key="hasDiaperTable">기저귀교환대</button>
+        <button class="chip" type="button" data-key="hasBell">비상벨</button>
+      </div>
+    </div>
+
+    <p class="note">지도 영역 · 상태별 핀<br><small>(Kakao Map SDK 연동 예정)</small></p>
+    <div class="loc-dot" style="top:56%; left:48%"></div>
+    <div id="pins"></div>
+
+    <div class="pin-legend">
+      <span><i style="background:var(--primary)"></i>개방</span>
+      <span><i style="background:var(--faint)"></i>미확인</span>
+      <span><i style="background:var(--danger)"></i>고장</span>
+    </div>
+
+    <button class="locate-fab" type="button" id="locate-btn" aria-label="현재 위치로 이동">⌖</button>
+    <button class="list-fab" type="button" id="list-fab">목록으로 보기</button>
+
+    <!-- 바텀시트: 닫힘 → 절반 → 전체 -->
+    <section class="list-sheet" id="list-sheet" aria-label="화장실 목록" inert>
+      <button class="sheet-grab" type="button" id="sheet-grab" aria-label="목록 높이 조절"><i></i></button>
+      <div class="sheet-head">
+        <span id="sheet-title">주변 화장실</span>
+        <span class="sub">거리순</span>
+      </div>
+      <div class="chip-scroll sheet-chips" id="sheet-chip-row"></div>
+      <div class="sheet-list" id="sheet-list"></div>
+      <button class="sheet-map-btn" type="button" id="sheet-map-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>
+        지도 보기
+      </button>
+    </section>
+  </main>
+
+  <nav class="app-tabbar" id="tabbar-root" aria-label="주요 메뉴"></nav>
+</div>
+
+<script src="./js/app.js"></script>
+<script>
+(async function () {
+  App.renderTabbar(document.getElementById("tabbar-root"), "home");
+
+  const mapArea = document.getElementById("map-area");
+  const sheet = document.getElementById("list-sheet");
+  const listEl = document.getElementById("sheet-list");
+  const searchInput = document.getElementById("home-search");
+
+  let activeKey = "";
+  let allToilets = [];
+  let pinEls = [];
+
+  /* ---------- 칩 필터 (지도 위 / 목록 시트 위 두 줄을 동기화) ---------- */
+  const chipRow = document.getElementById("type-chip-row");
+  const sheetChipRow = document.getElementById("sheet-chip-row");
+  sheetChipRow.innerHTML = chipRow.innerHTML;
+  App.enableDragScroll(chipRow);
+  App.enableDragScroll(sheetChipRow);
+
+  function setFilter(key) {
+    activeKey = key;
+    [chipRow, sheetChipRow].forEach((row) => {
+      row.querySelectorAll(".chip").forEach((c) => c.classList.toggle("active", c.dataset.key === key));
+    });
+    applyPinFilter();
+    renderList();
+  }
+  [chipRow, sheetChipRow].forEach((row) => {
+    row.addEventListener("click", (e) => {
+      const btn = e.target.closest(".chip");
+      if (btn) setFilter(btn.dataset.key);
+    });
+  });
+
+  function applyPinFilter() {
+    pinEls.forEach(({ el, toilet }) => {
+      el.style.display = !activeKey || toilet[activeKey] ? "" : "none";
+    });
+  }
+
+  /* ---------- 시트 목록 ---------- */
+  function filtered() {
+    const q = searchInput.value.trim().toLowerCase();
+    return allToilets
+      .filter((t) => {
+        const mq = !q || t.name.toLowerCase().includes(q) || t.area.toLowerCase().includes(q);
+        return mq && (!activeKey || t[activeKey]);
+      })
+      .sort((a, b) => a.distanceM - b.distanceM);
+  }
+
+  function renderList() {
+    const list = filtered();
+    document.getElementById("sheet-title").textContent = `주변 화장실 ${list.length}곳`;
+    if (list.length === 0) {
+      listEl.innerHTML = `
+        <div class="state-block">
+          <div class="state-icon">!</div>
+          <div class="state-title">조건에 맞는 화장실이 없습니다</div>
+          <div class="state-sub">검색어나 조건을 바꿔보세요</div>
+        </div>`;
+      return;
+    }
+    listEl.innerHTML = list.map((t) => {
+      const fav = App.isFavorite(t.id);
+      const badges = App.badgesOf(t).slice(0, 3);
+      return `
+        <div class="toilet-card" style="align-items:center">
+          <a href="pages/detail.html?id=${t.id}" draggable="false" style="display:flex;gap:12px;flex:1;min-width:0">
+            <div class="thumb">이미지</div>
+            <div class="card-body">
+              <span class="card-name">${t.name}</span>
+              <span class="card-dist">${t.area} · 도보 ${Math.max(1, Math.round(t.distanceM / 70))}분</span>
+              <div class="badge-row">${badges.map((b) => `<span class="badge ok">${b}</span>`).join("")}</div>
+            </div>
+          </a>
+          <button class="fav-toggle${fav ? " active" : ""}" type="button" data-id="${t.id}" aria-label="즐겨찾기 토글">${fav ? "★" : "☆"}</button>
+        </div>`;
+    }).join("");
+  }
+
+  listEl.addEventListener("click", (e) => {
+    const btn = e.target.closest(".fav-toggle");
+    if (!btn) return;
+    const on = App.toggleFavorite(btn.dataset.id);
+    btn.classList.toggle("active", on);
+    btn.textContent = on ? "★" : "☆";
+  });
+
+  searchInput.addEventListener("input", renderList);
+
+  /* ---------- 바텀시트 상태/드래그 ---------- */
+  let state = "closed";
+  let H = 0;
+  let y = 0;
+  const HALF_RATIO = 0.42; // 절반 상태에서 시트 상단 위치(지도 높이 대비)
+
+  const posFor = (s) => (s === "full" ? 0 : s === "half" ? Math.round(H * HALF_RATIO) : H);
+
+  function setState(s) {
+    state = s;
+    H = mapArea.clientHeight;
+    y = posFor(s);
+    sheet.style.transition = "";
+    sheet.style.transform = `translateY(${y}px)`;
+    mapArea.dataset.sheet = s;
+    sheet.classList.toggle("is-full", s === "full");
+    sheet.inert = s === "closed";
+    if (s !== "full") listEl.scrollTop = 0;
+  }
+
+  window.addEventListener("resize", () => setState(state));
+
+  document.getElementById("list-fab").addEventListener("click", () => {
+    renderList();
+    setState("half");
+  });
+  document.getElementById("sheet-map-btn").addEventListener("click", () => setState("closed"));
+  document.getElementById("search-form").addEventListener("submit", () => {
+    searchInput.blur();
+    renderList();
+    if (state === "closed") setState("half");
+  });
+  document.getElementById("sheet-grab").addEventListener("click", () => {
+    setState(state === "half" ? "full" : "half");
+  });
+
+  let drag = null;
+  let suppressClick = false;
+
+  sheet.addEventListener("pointerdown", (e) => {
+    if (state === "closed") return;
+    if (e.target.closest("#sheet-map-btn")) return;
+    // 전체 화면 상태에서 목록 영역은 네이티브 스크롤에 맡김
+    if (state === "full" && e.target.closest("#sheet-list")) return;
+    drag = { id: e.pointerId, startX: e.clientX, startY: e.clientY, startPos: y, active: false, lastY: e.clientY, lastT: e.timeStamp, v: 0 };
+  });
+
+  sheet.addEventListener("pointermove", (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const dy = e.clientY - drag.startY;
+    if (!drag.active) {
+      if (Math.abs(dy) < 6) return;
+      if (Math.abs(e.clientX - drag.startX) > Math.abs(dy)) { drag = null; return; } // 가로 제스처는 칩 스크롤에 양보
+      drag.active = true;
+      sheet.setPointerCapture(e.pointerId);
+      sheet.style.transition = "none";
+    }
+    const dt = Math.max(1, e.timeStamp - drag.lastT);
+    drag.v = (e.clientY - drag.lastY) / dt; // px/ms
+    drag.lastY = e.clientY;
+    drag.lastT = e.timeStamp;
+    y = Math.min(H, Math.max(0, drag.startPos + dy));
+    sheet.style.transform = `translateY(${y}px)`;
+  });
+
+  function endDrag(e) {
+    if (!drag || e.pointerId !== drag.id) return;
+    const d = drag;
+    drag = null;
+    if (!d.active) return;
+    suppressClick = true;
+    setTimeout(() => (suppressClick = false), 0);
+    const projected = y + d.v * 180; // 속도 반영
+    const targets = [["full", posFor("full")], ["half", posFor("half")], ["closed", H]];
+    targets.sort((a, b) => Math.abs(a[1] - projected) - Math.abs(b[1] - projected));
+    setState(targets[0][0]);
+  }
+  sheet.addEventListener("pointerup", endDrag);
+  sheet.addEventListener("pointercancel", endDrag);
+  sheet.addEventListener("click", (e) => {
+    if (suppressClick) { e.stopPropagation(); e.preventDefault(); }
+  }, true);
+
+  /* ---------- 현재 위치 ---------- */
+  document.getElementById("locate-btn").addEventListener("click", () => {
+    const dot = document.querySelector(".loc-dot");
+    dot.animate(
+      [{ transform: "translate(-50%,-50%) scale(1)" }, { transform: "translate(-50%,-50%) scale(1.6)" }, { transform: "translate(-50%,-50%) scale(1)" }],
+      { duration: 500 }
+    );
+  });
+
+  /* ---------- 데이터/핀 ---------- */
+  try {
+    allToilets = await App.loadToilets();
+    const pinsEl = document.getElementById("pins");
+    const positions = [
+      { top: "34%", left: "22%" }, { top: "26%", left: "58%" },
+      { top: "60%", left: "70%" }, { top: "68%", left: "20%" },
+      { top: "44%", left: "80%" }, { top: "50%", left: "38%" },
+      { top: "72%", left: "50%" },
+    ];
+    allToilets.slice(0, 7).forEach((t, i) => {
+      const pin = document.createElement("div");
+      const status = t.status || "open";
+      pin.className = `map-pin status-${status}`;
+      pin.style.top = positions[i % positions.length].top;
+      pin.style.left = positions[i % positions.length].left;
+      pin.title = `${t.name} · ${status === "open" ? "개방" : status === "broken" ? "고장" : "미확인"}`;
+      pinsEl.appendChild(pin);
+      pinEls.push({ el: pin, toilet: t });
+    });
+    renderList();
+  } catch (err) {
+    console.error(err);
+  }
+
+  setState("closed");
+})();
+</script>
+</body>
+</html>
