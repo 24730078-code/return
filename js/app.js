@@ -5,38 +5,121 @@
 
 const App = (() => {
   const IN_PAGES = location.pathname.includes("/pages/");
-  const DATA_URL = IN_PAGES ? "../data/toilets.json" : "./data/toilets.json";
+  const DATA_URL = IN_PAGES ? "../data/toilets_seoul_jung.json" : "./data/toilets_seoul_jung.json";
   const HOME_URL = IN_PAGES ? "../index.html" : "./index.html";
   const pageUrl = (name) => (IN_PAGES ? `./${name}` : `pages/${name}`);
 
   const FAV_KEY = "pt_favorites";   // 즐겨찾기 id 배열
   const RECENT_KEY = "pt_recent";   // 최근 본 공간 [{id, viewedAt}]
 
+  /* ---------- 위치/거리 (GEO) ----------
+     JSON에는 좌표가 없어서, 카카오 지오코더로 구한 좌표를 LocalStorage에 캐시해 둡니다.
+     (js/kakao-map.js가 좌표를 저장하고, 다른 페이지는 캐시를 읽어 거리를 계산합니다) */
+  const GEO_KEY = "pt_geo_v1";       // { [id]: [lat, lng] }
+  const ORIGIN_KEY = "pt_origin";    // 마지막으로 확인한 내 위치 {lat, lng}
+  const DEFAULT_ORIGIN = { lat: 37.5665, lng: 126.9780 }; // 서울시청 (위치 권한 전 기본값)
+  const GEO = (() => {
+    const read = (k, fb) => { try { return JSON.parse(localStorage.getItem(k)) || fb; } catch { return fb; } };
+    const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+    const getOrigin = () => read(ORIGIN_KEY, DEFAULT_ORIGIN);
+    const setOrigin = (o) => write(ORIGIN_KEY, { lat: o.lat, lng: o.lng });
+    function haversine(a, b) {
+      const R = 6371000, rad = (d) => (d * Math.PI) / 180;
+      const dLat = rad(b.lat - a.lat), dLng = rad(b.lng - a.lng);
+      const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
+      return 2 * R * Math.asin(Math.sqrt(h));
+    }
+    const cache = () => read(GEO_KEY, {});
+    const saveCache = (c) => write(GEO_KEY, c);
+    function applyCache(list) {
+      const c = cache();
+      list.forEach((t) => { if (c[t.id]) { t.lat = c[t.id][0]; t.lng = c[t.id][1]; } });
+    }
+    function applyDistances(list) {
+      const o = getOrigin();
+      list.forEach((t) => {
+        t.distanceM = t.lat != null && t.lng != null ? Math.round(haversine(o, t)) : null;
+      });
+    }
+    function locate() {
+      return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) return reject(new Error("geolocation unsupported"));
+        navigator.geolocation.getCurrentPosition(
+          (p) => { const o = { lat: p.coords.latitude, lng: p.coords.longitude }; setOrigin(o); resolve(o); },
+          reject,
+          { enableHighAccuracy: true, timeout: 8000 }
+        );
+      });
+    }
+    return { getOrigin, setOrigin, haversine, cache, saveCache, applyCache, applyDistances, locate, DEFAULT_ORIGIN };
+  })();
+
   /* ---------- 데이터 로드 ----------
-     file:// 로 index.html을 직접 열면 브라우저 보안 정책(CORS) 때문에
-     fetch()가 막힐 수 있어, 그 경우에는 아래 내장 샘플로 대체합니다.
-     (python3 -m http.server 등 로컬 서버로 열면 fetch가 정상 동작합니다) */
-  const FALLBACK_TOILETS = [
-    { id: "t01", name: "홍대입구역 2번 출구 공중화장실", area: "홍대입구", address: "서울 마포구 양화로 160 지하1층", image: "", hasStepFree: true, hasAutoDoor: true, turnSpace: true, hasDiaperTable: true, hasBell: true, genderSeparated: true, hasSupplies: true, openTime: "05:30", closeTime: "24:00", distanceM: 320, status: "open" },
-    { id: "t02", name: "경의선숲길 공원 화장실", area: "홍대입구", address: "서울 마포구 양화로 93", image: "", hasStepFree: true, hasAutoDoor: false, turnSpace: true, hasDiaperTable: false, hasBell: true, genderSeparated: true, hasSupplies: true, openTime: "06:00", closeTime: "22:00", distanceM: 540, status: "unknown" },
-    { id: "t03", name: "산울림소극장 옆 개방화장실", area: "홍대입구", address: "서울 마포구 와우산로 128", image: "", hasStepFree: false, hasAutoDoor: false, turnSpace: false, hasDiaperTable: false, hasBell: false, genderSeparated: true, hasSupplies: false, openTime: "09:00", closeTime: "23:00", distanceM: 710, status: "broken" },
-    { id: "t04", name: "잠실역 롯데월드몰 공용화장실", area: "잠실", address: "서울 송파구 올림픽로 240", image: "", hasStepFree: true, hasAutoDoor: true, turnSpace: true, hasDiaperTable: true, hasBell: true, genderSeparated: true, hasSupplies: true, openTime: "00:00", closeTime: "24:00", distanceM: 180, status: "open" },
-    { id: "t05", name: "석촌호수 동호 공중화장실", area: "잠실", address: "서울 송파구 석촌호수로 148", image: "", hasStepFree: true, hasAutoDoor: false, turnSpace: true, hasDiaperTable: true, hasBell: true, genderSeparated: true, hasSupplies: true, openTime: "05:00", closeTime: "23:00", distanceM: 430, status: "open" },
-    { id: "t06", name: "성수동 서울숲 입구 화장실", area: "성수동", address: "서울 성동구 뚝섬로 273", image: "", hasStepFree: true, hasAutoDoor: true, turnSpace: false, hasDiaperTable: true, hasBell: false, genderSeparated: true, hasSupplies: true, openTime: "06:00", closeTime: "22:00", distanceM: 260, status: "unknown" },
-    { id: "t07", name: "건대입구역 공중화장실", area: "건대입구", address: "서울 광진구 능동로 110", image: "", hasStepFree: false, hasAutoDoor: true, turnSpace: false, hasDiaperTable: false, hasBell: true, genderSeparated: true, hasSupplies: true, openTime: "05:30", closeTime: "24:00", distanceM: 390, status: "open" },
-  ];
+     data/toilets_seoul_jung.json(서울 중구·종로구 200건)을 불러와 화면에서 쓰는 형태로 가공합니다.
+     ※ fetch()가 필요하므로 파일 더블클릭(file://)이 아니라 로컬 서버/GitHub Pages로 열어야 합니다. */
+  function parseHours(raw) {
+    const text = String(raw || "").trim();
+    if (text === "상시") return { openTime: "00:00", closeTime: "24:00", hoursLabel: "상시 (24시간)" };
+    const m = text.match(/(\d{1,2}:\d{2})\s*~\s*(\d{1,2}:\d{2})/);
+    if (m) return { openTime: m[1].padStart(5, "0"), closeTime: m[2].padStart(5, "0"), hoursLabel: `${m[1]} – ${m[2]}` };
+    return { openTime: "", closeTime: "", hoursLabel: text || "정보 없음" };
+  }
+  function normalize(r) {
+    const disabledStalls = (r.maleDisabledToilet || 0) + (r.maleDisabledUrinal || 0) + (r.femaleDisabledToilet || 0);
+    return {
+      ...r,
+      source: "json",
+      area: r.district,
+      address: r.roadAddress || r.lotAddress || "",
+      image: "",
+      disabledStalls,
+      maleStalls: (r.maleToilet || 0) + (r.maleUrinal || 0) + (r.maleDisabledToilet || 0) + (r.maleDisabledUrinal || 0) + (r.maleChildToilet || 0) + (r.maleChildUrinal || 0),
+      femaleStalls: (r.femaleToilet || 0) + (r.femaleDisabledToilet || 0) + (r.femaleChildToilet || 0),
+      hasStepFree: disabledStalls > 0,          // 장애인용 칸이 있으면 '무장애'로 분류
+      hasBell: !!r.hasBell,
+      hasCctv: !!r.hasCctv,
+      hasDiaperTable: !!r.hasDiaperTable,
+      genderSeparated: (r.maleToilet || 0) + (r.maleUrinal || 0) > 0 && (r.femaleToilet || 0) > 0,
+      ...parseHours(r.openHours),
+      status: "open",                            // 공공데이터 등재 = 개방. (카카오 검색 추가분은 'unknown')
+      lat: null, lng: null, distanceM: null,
+    };
+  }
 
   async function loadToilets() {
-    try {
-      const res = await fetch(DATA_URL);
-      if (!res.ok) throw new Error("bad response");
-      const data = await res.json();
-      if (!Array.isArray(data) || data.length === 0) throw new Error("empty");
-      return data;
-    } catch (err) {
-      console.warn("[App] data/toilets.json을 불러오지 못해 내장 샘플 데이터로 대체합니다.", err);
-      return FALLBACK_TOILETS;
-    }
+    const res = await fetch(DATA_URL);
+    if (!res.ok) throw new Error("bad response");
+    const data = await res.json();
+    if (!Array.isArray(data) || data.length === 0) throw new Error("empty");
+    const list = data.map(normalize);
+    GEO.applyCache(list);
+    GEO.applyDistances(list);
+    return list;
+  }
+  /* 출처 표시: J = 공공데이터 JSON, A = 카카오 API 검색 */
+  function srcTag(t) {
+    return t.source === "kakao"
+      ? `<span class="src-tag src-a" title="카카오 API 검색 결과">A</span>`
+      : `<span class="src-tag src-j" title="공공데이터 JSON">J</span>`;
+  }
+  /* 남/여 아이콘 (남=파랑, 여=분홍) */
+  const MALE_ICON = `<svg class="gi gi-m" viewBox="0 0 24 24" role="img" aria-label="남자"><circle cx="12" cy="5" r="3"/><path d="M8 10h8a1 1 0 0 1 1 1v6h-2v5h-3v-5h-2v5H9v-5H7v-6a1 1 0 0 1 1-1z"/></svg>`;
+  const FEMALE_ICON = `<svg class="gi gi-f" viewBox="0 0 24 24" role="img" aria-label="여자"><circle cx="12" cy="5" r="3"/><path d="M12 9c1.5 0 2.4.8 2.8 2L18 19h-3v3h-2v-3h-2v3H9v-3H6l3.2-8c.4-1.2 1.3-2 2.8-2z"/></svg>`;
+  /* "남자화장실+여자화장실" 같은 위치 문구 → 아이콘 + 점 구분 */
+  function placeHtml(str) {
+    if (!str) return "";
+    return String(str).split("+").map((p) => {
+      p = p.trim();
+      if (p === "남자화장실") return MALE_ICON;
+      if (p === "여자화장실") return FEMALE_ICON;
+      if (p === "장애인화장실") return `<span class="gi-text">장애인</span>`;
+      return `<span class="gi-text">${p}</span>`;
+    }).join('<span class="gi-dot">·</span>');
+  }
+
+  /* 카드에 쓰는 '지역 · 도보 N분' 문구 (좌표를 아직 모르면 지역만 표시) */
+  function distLabel(t) {
+    return t.distanceM == null ? `${t.area || ""}` : `${t.area || ""} · 도보 ${Math.max(1, Math.round(t.distanceM / 70))}분`;
   }
 
   /* ---------- LocalStorage ---------- */
@@ -75,9 +158,9 @@ const App = (() => {
   /* ---------- 표시 가공 ---------- */
   const BADGE_DEFS = [
     { key: "hasStepFree", label: "턱없음" },
-    { key: "hasAutoDoor", label: "자동문" },
-    { key: "hasDiaperTable", label: "기저귀교환대" },
     { key: "hasBell", label: "비상벨" },
+    { key: "hasCctv", label: "CCTV" },
+    { key: "hasDiaperTable", label: "기저귀교환대" },
   ];
   function badgesOf(t) {
     return BADGE_DEFS.filter((b) => t[b.key]).map((b) => b.label);
@@ -191,7 +274,7 @@ const App = (() => {
 
   return {
     IN_PAGES, pageUrl, HOME_URL,
-    loadToilets,
+    loadToilets, distLabel, GEO, srcTag, placeHtml, MALE_ICON, FEMALE_ICON,
     getFavorites, isFavorite, toggleFavorite,
     getRecent, addRecent, relativeTime,
     badgesOf, isOpenNow,
