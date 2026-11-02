@@ -21,9 +21,9 @@
     </div>
     <div class="chip-row" id="filter-row">
       <button class="chip" type="button" data-key="hasStepFree">턱없음</button>
-      <button class="chip" type="button" data-key="hasDiaperTable">기저귀교환대</button>
       <button class="chip" type="button" data-key="hasBell">비상벨</button>
-      <button class="chip" type="button" data-key="hasAutoDoor">자동문</button>
+      <button class="chip" type="button" data-key="hasCctv">CCTV</button>
+      <button class="chip" type="button" data-key="hasDiaperTable">기저귀교환대</button>
     </div>
     <div class="result-row">
       <span id="result-count">조건 0개 적용 · <b>-</b>곳</span>
@@ -59,7 +59,7 @@
   App.renderTabbar(document.getElementById("tabbar-root"), "list");
 
   const params = new URLSearchParams(location.search);
-  const FILTER_KEYS = ["hasStepFree", "hasAutoDoor", "hasDiaperTable", "hasBell"];
+  const FILTER_KEYS = ["hasStepFree", "hasBell", "hasCctv", "hasDiaperTable"];
   const initialQuery = params.get("q") || "";
 
   const activeFilters = new Set(FILTER_KEYS.filter((k) => params.get(k) === "1"));
@@ -110,13 +110,13 @@
   function render() {
     const q = document.getElementById("list-search").value.trim().toLowerCase();
     let list = allToilets.filter((t) => {
-      const matchQuery = !q || t.name.toLowerCase().includes(q) || t.area.toLowerCase().includes(q);
+      const matchQuery = !q || t.name.toLowerCase().includes(q) || t.area.toLowerCase().includes(q) || (t.address || "").toLowerCase().includes(q);
       const matchFilters = [...activeFilters].every((key) => t[key]);
       return matchQuery && matchFilters;
     });
 
     list = list.slice().sort((a, b) =>
-      sortMode === "distance" ? a.distanceM - b.distanceM : (b.closeTime > a.closeTime ? 1 : -1)
+      sortMode === "distance" ? (a.distanceM ?? 1e9) - (b.distanceM ?? 1e9) : (b.closeTime > a.closeTime ? 1 : -1)
     );
 
     const cardList = document.getElementById("card-list");
@@ -129,7 +129,7 @@
     if (list.length === 0) {
       cardList.innerHTML = "";
       emptyState.hidden = false;
-      const labelMap = { hasStepFree: "턱없음", hasDiaperTable: "기저귀교환대", hasBell: "비상벨", hasAutoDoor: "자동문" };
+      const labelMap = { hasStepFree: "턱없음", hasDiaperTable: "기저귀교환대", hasBell: "비상벨", hasCctv: "CCTV" };
       document.getElementById("empty-hint").textContent = lastAppliedKey
         ? `"${labelMap[lastAppliedKey]}" 조건을 해제하면 더 많은 결과를 볼 수 있어요`
         : "검색어나 조건을 바꿔보세요";
@@ -146,9 +146,9 @@
             <div class="thumb">이미지</div>
             <div class="card-body">
               <div class="card-name-row">
-                <span class="card-name">${t.name}</span>
+                <span class="card-name">${t.name}${App.srcTag(t)}</span>
               </div>
-              <span class="card-dist">${t.area} · 도보 ${Math.round(t.distanceM / 70)}분</span>
+              <span class="card-dist">${App.distLabel(t)}</span>
               <div class="badge-row">
                 ${badges.map((b) => `<span class="badge ok">${b}</span>`).join("")}
               </div>

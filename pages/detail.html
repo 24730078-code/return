@@ -33,9 +33,9 @@
     <section>
       <div class="section-title" style="margin-bottom:6px">보조 정보</div>
       <div class="info-row"><span class="label">주소</span><span id="v-address">-</span></div>
-      <div class="info-row"><span class="label">운영시간</span><span id="v-hours">-</span></div>
-      <div class="info-row"><span class="label">남녀분리</span><span id="v-gender">-</span></div>
-      <div class="info-row"><span class="label">휴지·비누</span><span id="v-supplies">-</span></div>
+      <div class="info-row"><span class="label">남녀구분</span><span id="v-gender" class="gi-row">-</span></div>
+      <div class="info-row"><span class="label">변기 수</span><span id="v-count" class="gi-row">-</span></div>
+      <div class="info-row"><span class="label">정보 갱신일</span><span id="v-updated">-</span></div>
     </section>
 
     <section class="report-row">
@@ -61,21 +61,26 @@
     if (!t) throw new Error("not found");
 
     document.title = `공공화장실 큐레이터 · ${t.name}`;
-    document.getElementById("h-title").textContent = t.name;
+    document.getElementById("h-title").innerHTML = `${t.name.replace(/</g, "&lt;")}${App.srcTag(t)}`;
 
     const yn = (v) => `<span class="spec-value ${v ? "yes" : "no"}">${v ? "있음" : "없음"}</span>`;
+    const sub = (html) => (html ? `<span class="spec-sub">${html}</span>` : "");
     document.getElementById("spec-grid").innerHTML = `
-      <div class="spec"><span class="spec-label">턱/계단</span>${yn(t.hasStepFree)}</div>
-      <div class="spec"><span class="spec-label">자동문</span>${yn(t.hasAutoDoor)}</div>
-      <div class="spec"><span class="spec-label">회전 공간(1.4m↑)</span>${yn(t.turnSpace)}</div>
-      <div class="spec"><span class="spec-label">기저귀 교환대</span>${yn(t.hasDiaperTable)}</div>
-      <div class="spec"><span class="spec-label">비상벨</span>${yn(t.hasBell)}</div>
-      <div class="spec"><span class="spec-label">24시간 개방</span>${yn(App.isOpenNow(t))}</div>
+      <div class="spec"><span class="spec-label">장애인화장실</span>${yn(t.hasStepFree)}${sub(t.hasStepFree ? `장애인용 ${t.disabledStalls}칸` : "")}</div>
+      <div class="spec"><span class="spec-label">기저귀 교환대</span>${yn(t.hasDiaperTable)}${sub(App.placeHtml(t.diaperTableLocation))}</div>
+      <div class="spec"><span class="spec-label">비상벨</span>${yn(t.hasBell)}${sub(App.placeHtml(t.bellLocation))}</div>
+      <div class="spec"><span class="spec-label">CCTV</span>${yn(t.hasCctv)}</div>
+      <div class="spec"><span class="spec-label">안심 시설 대상</span>${yn(t.safetyFacilityTarget)}</div>
+      <div class="spec"><span class="spec-label">운영시간</span><span class="spec-value">${t.openHours || "정보 없음"}</span></div>
     `;
     document.getElementById("v-address").textContent = t.address;
-    document.getElementById("v-hours").textContent = `${t.openTime} – ${t.closeTime}`;
-    document.getElementById("v-gender").textContent = t.genderSeparated ? "분리형" : "공용";
-    document.getElementById("v-supplies").textContent = t.hasSupplies ? "비치됨" : "비치 안 됨";
+    const hasM = t.maleStalls > 0, hasF = t.femaleStalls > 0;
+    document.getElementById("v-gender").innerHTML =
+      (hasM ? App.MALE_ICON : "") + (hasF ? App.FEMALE_ICON : "") +
+      `<span>${hasM && hasF ? "남녀 분리" : hasM ? "남자 전용" : hasF ? "여자 전용" : "정보 없음"}</span>`;
+    document.getElementById("v-count").innerHTML =
+      `${App.MALE_ICON}<b>${t.maleStalls}</b><span class="gi-dot">·</span>${App.FEMALE_ICON}<b>${t.femaleStalls}</b>`;
+    document.getElementById("v-updated").textContent = (t.updatedAt || "").slice(0, 10) || "정보 없음";
 
     const saveBtn = document.getElementById("save-btn");
     function syncSaveBtn() {

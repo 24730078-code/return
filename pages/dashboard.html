@@ -18,13 +18,13 @@
 
   <main class="content" id="content">
     <section>
-      <div class="section-title">전국 공공화장실 현황</div>
+      <div class="section-title">서울 중구·종로구 공공화장실 현황</div>
       <span class="dash-updated" id="updated-at">기준일 -</span>
     </section>
 
     <div class="dash-total">
       <div class="num" id="total-count">-</div>
-      <div class="lbl">등록된 공공화장실 (현재 샘플 데이터 기준)</div>
+      <div class="lbl">등록된 공공화장실 (공공데이터 기준)</div>
     </div>
 
     <div class="dash-grid">
@@ -80,7 +80,7 @@
       document.getElementById("error-state").hidden = true;
 
       document.getElementById("updated-at").textContent =
-        "기준일 " + new Date().toISOString().slice(0, 10).replaceAll("-", ".");
+        "기준일 " + (toilets.map((t) => t.updatedAt || "").sort().pop() || "").slice(0, 10).replaceAll("-", ".");
       document.getElementById("total-count").textContent = toilets.length.toLocaleString() + "개";
       document.getElementById("count-stepfree").textContent = App.countBy(toilets, "hasStepFree");
       document.getElementById("count-diaper").textContent = App.countBy(toilets, "hasDiaperTable");

@@ -182,7 +182,7 @@
           <a href="./detail.html?id=${t.id}" style="display:flex;gap:12px;flex:1;min-width:0;text-decoration:none;color:inherit">
             <div class="thumb">이미지</div>
             <div class="card-body">
-              <span class="card-name">${t.name}</span>
+              <span class="card-name">${t.name}${App.srcTag(t)}</span>
               <span class="card-dist">${sub || t.area}</span>
               <div class="badge-row">${badges.map((b) => `<span class="badge ok">${b}</span>`).join("")}</div>
             </div>
