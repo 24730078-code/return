@@ -23,21 +23,21 @@
       <div class="chip-scroll" id="type-chip-row">
         <button class="chip active" type="button" data-key="">전체</button>
         <button class="chip" type="button" data-key="hasStepFree">무장애</button>
-        <button class="chip" type="button" data-key="hasAutoDoor">자동문</button>
-        <button class="chip" type="button" data-key="hasDiaperTable">기저귀교환대</button>
         <button class="chip" type="button" data-key="hasBell">비상벨</button>
+        <button class="chip" type="button" data-key="hasCctv">CCTV</button>
+        <button class="chip" type="button" data-key="hasDiaperTable">기저귀교환대</button>
       </div>
     </div>
 
-    <p class="note">지도 영역 · 상태별 핀<br><small>(Kakao Map SDK 연동 예정)</small></p>
-    <div class="loc-dot" style="top:56%; left:48%"></div>
-    <div id="pins"></div>
+    <div id="kakao-map" aria-hidden="false"></div>
+    <p class="note" id="map-note">지도를 불러오는 중…</p>
 
     <div class="pin-legend">
-      <span><i style="background:var(--primary)"></i>개방</span>
-      <span><i style="background:var(--faint)"></i>미확인</span>
-      <span><i style="background:var(--danger)"></i>고장</span>
+      <span><i style="background:var(--primary)"></i>J 공공데이터</span>
+      <span><i style="background:var(--faint)"></i>A 카카오 API</span>
     </div>
+
+    <div class="pin-card" id="pin-card" hidden></div>
 
     <button class="locate-fab" type="button" id="locate-btn" aria-label="현재 위치로 이동">⌖</button>
     <button class="list-fab" type="button" id="list-fab">목록으로 보기</button>
@@ -61,7 +61,9 @@
   <nav class="app-tabbar" id="tabbar-root" aria-label="주요 메뉴"></nav>
 </div>
 
+<script src="./js/config.js"></script>
 <script src="./js/app.js"></script>
+<script src="./js/kakao-map.js"></script>
 <script>
 (async function () {
   App.renderTabbar(document.getElementById("tabbar-root"), "home");
@@ -71,9 +73,10 @@
   const listEl = document.getElementById("sheet-list");
   const searchInput = document.getElementById("home-search");
 
-  let activeKey = "";
+  const activeKeys = new Set(); // 중복 선택된 조건 (비어 있으면 전체)
   let allToilets = [];
-  let pinEls = [];
+  let extraToilets = [];
+  let loadFailed = false;
 
   /* ---------- 칩 필터 (지도 위 / 목록 시트 위 두 줄을 동기화) ---------- */
   const chipRow = document.getElementById("type-chip-row");
@@ -83,11 +86,14 @@
   App.enableDragScroll(sheetChipRow);
 
   function setFilter(key) {
-    activeKey = key;
+    if (!key) activeKeys.clear();                 // '전체' = 모든 조건 해제
+    else if (activeKeys.has(key)) activeKeys.delete(key);
+    else activeKeys.add(key);
     [chipRow, sheetChipRow].forEach((row) => {
-      row.querySelectorAll(".chip").forEach((c) => c.classList.toggle("active", c.dataset.key === key));
+      row.querySelectorAll(".chip").forEach((c) => {
+        c.classList.toggle("active", c.dataset.key ? activeKeys.has(c.dataset.key) : activeKeys.size === 0);
+      });
     });
-    applyPinFilter();
     renderList();
   }
   [chipRow, sheetChipRow].forEach((row) => {
@@ -97,26 +103,38 @@
     });
   });
 
-  function applyPinFilter() {
-    pinEls.forEach(({ el, toilet }) => {
-      el.style.display = !activeKey || toilet[activeKey] ? "" : "none";
-    });
-  }
+  /* ---------- 목록 + 핀 (공공데이터 JSON + 카카오 검색 추가분) ---------- */
+  const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const allItems = () => allToilets.concat(extraToilets);
 
-  /* ---------- 시트 목록 ---------- */
   function filtered() {
     const q = searchInput.value.trim().toLowerCase();
-    return allToilets
+    return allItems()
       .filter((t) => {
-        const mq = !q || t.name.toLowerCase().includes(q) || t.area.toLowerCase().includes(q);
-        return mq && (!activeKey || t[activeKey]);
+        const mq = !q || t.name.toLowerCase().includes(q) || (t.area || "").toLowerCase().includes(q) || (t.address || "").toLowerCase().includes(q);
+        return mq && [...activeKeys].every((k) => t[k]);
       })
-      .sort((a, b) => a.distanceM - b.distanceM);
+      .sort((a, b) => (a.distanceM ?? 1e9) - (b.distanceM ?? 1e9));
+  }
+
+  function badgesHtml(t) {
+    if (t.source === "kakao") return `<span class="badge">안심 정보 없음</span>`;
+    return App.badgesOf(t).slice(0, 3).map((b) => `<span class="badge ok">${b}</span>`).join("");
   }
 
   function renderList() {
     const list = filtered();
+    KakaoMap.showMarkers(list);
     document.getElementById("sheet-title").textContent = `주변 화장실 ${list.length}곳`;
+    if (loadFailed) {
+      listEl.innerHTML = `
+        <div class="state-block">
+          <div class="state-icon">⟳</div>
+          <div class="state-title">화장실 정보를 불러오지 못했습니다</div>
+          <div class="state-sub">파일을 직접 열지 말고 로컬 서버(python -m http.server 5500)로 열어 주세요</div>
+        </div>`;
+      return;
+    }
     if (list.length === 0) {
       listEl.innerHTML = `
         <div class="state-block">
@@ -127,22 +145,41 @@
       return;
     }
     listEl.innerHTML = list.map((t) => {
-      const fav = App.isFavorite(t.id);
-      const badges = App.badgesOf(t).slice(0, 3);
+      const isKakao = t.source === "kakao";
+      const href = isKakao ? `href="${esc(t.placeUrl)}" target="_blank" rel="noopener"` : `href="pages/detail.html?id=${t.id}"`;
+      const fav = !isKakao && App.isFavorite(t.id);
       return `
         <div class="toilet-card" style="align-items:center">
-          <a href="pages/detail.html?id=${t.id}" draggable="false" style="display:flex;gap:12px;flex:1;min-width:0">
+          <a ${href} draggable="false" style="display:flex;gap:12px;flex:1;min-width:0">
             <div class="thumb">이미지</div>
             <div class="card-body">
-              <span class="card-name">${t.name}</span>
-              <span class="card-dist">${t.area} · 도보 ${Math.max(1, Math.round(t.distanceM / 70))}분</span>
-              <div class="badge-row">${badges.map((b) => `<span class="badge ok">${b}</span>`).join("")}</div>
+              <span class="card-name">${esc(t.name)}${App.srcTag(t)}</span>
+              <span class="card-dist">${esc(App.distLabel(t))}</span>
+              <div class="badge-row">${badgesHtml(t)}</div>
             </div>
           </a>
-          <button class="fav-toggle${fav ? " active" : ""}" type="button" data-id="${t.id}" aria-label="즐겨찾기 토글">${fav ? "★" : "☆"}</button>
+          ${isKakao ? "" : `<button class="fav-toggle${fav ? " active" : ""}" type="button" data-id="${t.id}" aria-label="즐겨찾기 토글">${fav ? "★" : "☆"}</button>`}
         </div>`;
     }).join("");
   }
+  let renderTimer = null;
+  const scheduleRender = () => { clearTimeout(renderTimer); renderTimer = setTimeout(renderList, 150); };
+
+  /* ---------- 핀 선택 카드 ---------- */
+  const pinCard = document.getElementById("pin-card");
+  function showPinCard(t) {
+    const isKakao = t.source === "kakao";
+    const href = isKakao ? `href="${esc(t.placeUrl)}" target="_blank" rel="noopener"` : `href="pages/detail.html?id=${t.id}"`;
+    pinCard.innerHTML = `
+      <a ${href}>
+        <span class="card-name">${esc(t.name)}${App.srcTag(t)}</span>
+        <span class="card-dist">${esc(App.distLabel(t))}</span>
+        <div class="badge-row">${badgesHtml(t)}</div>
+      </a>
+      <span class="pin-card-go">${isKakao ? "카카오맵 ›" : "상세 ›"}</span>`;
+    pinCard.hidden = false;
+  }
+  const hidePinCard = () => { pinCard.hidden = true; };
 
   listEl.addEventListener("click", (e) => {
     const btn = e.target.closest(".fav-toggle");
@@ -238,40 +275,57 @@
   }, true);
 
   /* ---------- 현재 위치 ---------- */
-  document.getElementById("locate-btn").addEventListener("click", () => {
-    const dot = document.querySelector(".loc-dot");
-    dot.animate(
-      [{ transform: "translate(-50%,-50%) scale(1)" }, { transform: "translate(-50%,-50%) scale(1.6)" }, { transform: "translate(-50%,-50%) scale(1)" }],
-      { duration: 500 }
-    );
+  document.getElementById("locate-btn").addEventListener("click", async () => {
+    try {
+      const pos = await App.GEO.locate();
+      App.GEO.applyDistances(allItems());
+      KakaoMap.setMyPos(pos);
+      renderList();
+    } catch (err) {
+      alert("현재 위치를 가져오지 못했습니다. 브라우저의 위치 권한을 허용해 주세요.");
+    }
   });
 
-  /* ---------- 데이터/핀 ---------- */
+  /* ---------- 데이터 + 카카오맵 ---------- */
+  const noteEl = document.getElementById("map-note");
   try {
     allToilets = await App.loadToilets();
-    const pinsEl = document.getElementById("pins");
-    const positions = [
-      { top: "34%", left: "22%" }, { top: "26%", left: "58%" },
-      { top: "60%", left: "70%" }, { top: "68%", left: "20%" },
-      { top: "44%", left: "80%" }, { top: "50%", left: "38%" },
-      { top: "72%", left: "50%" },
-    ];
-    allToilets.slice(0, 7).forEach((t, i) => {
-      const pin = document.createElement("div");
-      const status = t.status || "open";
-      pin.className = `map-pin status-${status}`;
-      pin.style.top = positions[i % positions.length].top;
-      pin.style.left = positions[i % positions.length].left;
-      pin.title = `${t.name} · ${status === "open" ? "개방" : status === "broken" ? "고장" : "미확인"}`;
-      pinsEl.appendChild(pin);
-      pinEls.push({ el: pin, toilet: t });
-    });
     renderList();
   } catch (err) {
     console.error(err);
+    loadFailed = true;
+    renderList();
   }
-
   setState("closed");
+
+  if (!KakaoMap.hasKey()) {
+    noteEl.innerHTML = "카카오 JavaScript 키가 비어 있어요<br><small>js/config.js 에 키를 입력하면 지도가 표시됩니다</small>";
+  } else {
+    try {
+      await KakaoMap.init({
+        el: document.getElementById("kakao-map"),
+        center: App.GEO.getOrigin(),
+        getKnown: () => allToilets,
+        onSelect: showPinCard,
+        onMapClick: hidePinCard,
+        onExtras: (list) => {          // 카카오 검색으로 추가된 화장실
+          extraToilets = list;
+          App.GEO.applyDistances(extraToilets);
+          scheduleRender();
+        },
+      });
+      noteEl.hidden = true;
+      renderList();
+      // 좌표가 없는 JSON 항목을 주소로 변환 → 변환되는 대로 핀/거리 갱신 → 끝나면 주변 검색 시작
+      KakaoMap.geocodeAll(allToilets, () => {
+        App.GEO.applyDistances(allToilets);
+        scheduleRender();
+      }).then(() => { App.GEO.applyDistances(allToilets); scheduleRender(); });
+    } catch (err) {
+      console.error(err);
+      noteEl.innerHTML = "지도를 불러오지 못했어요<br><small>키 값과 카카오 콘솔의 사이트 도메인 등록을 확인해 주세요</small>";
+    }
+  }
 })();
 </script>
 </body>
