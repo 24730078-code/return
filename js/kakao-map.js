@@ -1,26 +1,16 @@
 /* ============================================
-   카카오맵 연동 (index.html 전용)
-   - SDK 로드, 지도/핀 표시
-   - JSON 200건: 주소 → 좌표 변환(지오코더) 후 LocalStorage 캐시
-   - 추가분: 지도 화면 주변 '공중화장실' 키워드 검색(최대 EXTRA_MAX건)
+   카카오맵 연동 (index.html 전용) — 지도 표시와 핀만 담당
+   - 화장실 데이터는 가져오지 않습니다 (데이터는 JSON / 서울시 API)
+   - 좌표가 없는 JSON 항목만 주소 → 좌표 변환(지오코더) 후 LocalStorage에 캐시
    ============================================ */
 
 const KakaoMap = (() => {
   const KEY = (window.KAKAO_JS_KEY || "").trim();
-  const EXTRA_MAX = 100;        // 카카오 검색으로 추가할 최대 개수
-  const EXTRA_RADIUS = 2000;    // 검색 반경(m)
-  const DUP_DISTANCE = 60;      // JSON 항목과 이 거리(m) 이내면 같은 화장실로 보고 제외
-
   let map, geocoder, places;
   let ready = false;
-  let geoDone = false;
-  let getKnown = () => [];
-  let onExtras = () => {};
   let onSelect = () => {};
   let myOverlay = null;
   const markers = new Map();    // id -> { ov, el }
-  const extras = new Map();     // id -> item
-  let searchTimer = null;
 
   const hasKey = () => KEY.length > 0;
 
@@ -38,20 +28,14 @@ const KakaoMap = (() => {
   async function init(opts) {
     if (!hasKey()) throw new Error("no key");
     onSelect = opts.onSelect || onSelect;
-    onExtras = opts.onExtras || onExtras;
-    getKnown = opts.getKnown || getKnown;
     await loadSdk();
     map = new kakao.maps.Map(opts.el, {
       center: new kakao.maps.LatLng(opts.center.lat, opts.center.lng),
       level: 5,
     });
     geocoder = new kakao.maps.services.Geocoder();
-    places = new kakao.maps.services.Places();
+    places = new kakao.maps.services.Places(); // 주소 변환 실패 시 '이름'으로 위치만 찾는 용도
     kakao.maps.event.addListener(map, "click", () => opts.onMapClick && opts.onMapClick());
-    kakao.maps.event.addListener(map, "idle", () => {
-      clearTimeout(searchTimer);
-      searchTimer = setTimeout(searchHere, 600);
-    });
     ready = true;
     window.addEventListener("resize", () => map && map.relayout());
   }
@@ -90,6 +74,7 @@ const KakaoMap = (() => {
     if (!ready) return;
     const cache = App.GEO.cache();
     const todo = list.filter((t) => {
+      if (t.lat != null) return false;           // 서울시 API 항목은 좌표가 이미 있음
       if (cache[t.id]) { t.lat = cache[t.id][0]; t.lng = cache[t.id][1]; return false; }
       return true;
     });
@@ -107,57 +92,8 @@ const KakaoMap = (() => {
     }
     await Promise.all([worker(), worker(), worker(), worker()]);
     App.GEO.saveCache(cache);
-    geoDone = true;
     const failed = list.filter((t) => t.lat == null).length;
     if (failed) console.warn(`[KakaoMap] 좌표를 찾지 못한 화장실 ${failed}건 (목록에는 표시, 지도 핀은 없음)`);
-    searchHere();
-  }
-
-  /* ---------- 주변 '공중화장실' 검색 (추가분) ---------- */
-  const norm = (s) => String(s || "").replace(/\s+/g, "");
-  function isDuplicate(p, known) {
-    const pos = { lat: +p.y, lng: +p.x };
-    return known.some((t) => {
-      if (t.lat == null) return false;
-      const d = App.GEO.haversine(pos, t);
-      return d <= DUP_DISTANCE || (d <= 200 && norm(t.name) === norm(p.place_name));
-    });
-  }
-  function searchHere() {
-    if (!ready || !geoDone || extras.size >= EXTRA_MAX) return;
-    const c = map.getCenter();
-    const known = getKnown();
-    let added = 0;
-    const handle = (data, status, pagination) => {
-      if (status !== kakao.maps.services.Status.OK) return;
-      data.forEach((p) => {
-        const id = "k" + p.id;
-        if (extras.has(id) || extras.size >= EXTRA_MAX) return;
-        if (!/화장실/.test(p.place_name) && !/화장실/.test(p.category_name || "")) return;
-        if (isDuplicate(p, known)) return;
-        extras.set(id, {
-          id, source: "kakao", placeUrl: p.place_url,
-          name: p.place_name,
-          area: (p.address_name || "").split(" ")[1] || "",
-          address: p.road_address_name || p.address_name || "",
-          phone: p.phone || "",
-          lat: +p.y, lng: +p.x,
-          status: "unknown",
-          hasStepFree: false, hasBell: false, hasCctv: false, hasDiaperTable: false,
-          distanceM: null,
-        });
-        added++;
-      });
-      if (pagination && pagination.hasNextPage && pagination.current < 3 && extras.size < EXTRA_MAX) {
-        pagination.nextPage();
-      } else if (added > 0) {
-        onExtras([...extras.values()]);
-        added = 0;
-      }
-    };
-    places.keywordSearch("공중화장실", handle, {
-      location: c, radius: EXTRA_RADIUS, sort: kakao.maps.services.SortBy.DISTANCE,
-    });
   }
 
   /* ---------- 핀 ---------- */
@@ -169,7 +105,7 @@ const KakaoMap = (() => {
     const ov = new kakao.maps.CustomOverlay({
       position: new kakao.maps.LatLng(t.lat, t.lng),
       content: el, xAnchor: 0, yAnchor: 0,
-      zIndex: t.source === "kakao" ? 1 : 2,
+      zIndex: t.source === "api" ? 2 : 1,
     });
     return { ov, el };
   }
@@ -210,5 +146,43 @@ const KakaoMap = (() => {
     map.setBounds(b, 120, 40, 120, 40);
   }
 
-  return { hasKey, init, geocodeAll, showMarkers, setMyPos, panTo, fitTo, isReady: () => ready };
+  /* 상세 페이지용: 화장실 한 곳을 크게 확대해서 보여 준다 */
+  async function showOne(el, t) {
+    await init({ el, center: t.lat != null ? { lat: t.lat, lng: t.lng } : App.GEO.getOrigin() });
+    map.setLevel(2);                         // 숫자가 작을수록 확대 (1~14)
+    map.setDraggable(false);
+    map.setZoomable(false);
+    if (t.lat == null) await geocodeAll([t]);   // 좌표가 아직 없으면 주소로 변환
+    if (t.lat == null) return false;
+    map.setCenter(new kakao.maps.LatLng(t.lat, t.lng));
+    showMarkers([t]);
+    return true;
+  }
+
+  /* 로드뷰: el 안에 가장 가까운 거리뷰를 띄운다. 근처(100m)에 로드뷰가 없으면 null.
+     el은 화면에 보이는(크기가 있는) 상태여야 한다. */
+  function openRoadview(el, t) {
+    return new Promise((resolve) => {
+      if (!ready || t.lat == null || t.lng == null) return resolve(null);
+      const client = new kakao.maps.RoadviewClient();
+      const pos = new kakao.maps.LatLng(t.lat, t.lng);
+      client.getNearestPanoId(pos, 100, (panoId) => {
+        if (panoId == null) return resolve(null);
+        el.innerHTML = "";
+        const rv = new kakao.maps.Roadview(el);
+        rv.setPanoId(panoId, pos);
+        resolve(rv);
+      });
+    });
+  }
+
+  /* 메인 지도: 특정 화장실이 가운데에 오도록 이동 (상세 → 메인 이동 시 위치 유지) */
+  function focusOn(t, level) {
+    if (!ready || t.lat == null || t.lng == null) return false;
+    map.setLevel(level || 3);
+    map.setCenter(new kakao.maps.LatLng(t.lat, t.lng));
+    return true;
+  }
+
+  return { hasKey, init, showOne, openRoadview, focusOn, geocodeAll, showMarkers, setMyPos, panTo, fitTo, isReady: () => ready };
 })();

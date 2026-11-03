@@ -34,10 +34,19 @@
 
     <div class="pin-legend">
       <span><i style="background:var(--primary)"></i>J 공공데이터</span>
-      <span><i style="background:var(--faint)"></i>A 카카오 API</span>
+      <span id="legend-a"><i style="background:#C98A2C"></i>A 서울시 API</span>
     </div>
 
     <div class="pin-card" id="pin-card" hidden></div>
+
+    <div class="rv-overlay" id="rv-overlay" hidden>
+      <div class="rv-bar">
+        <span class="rv-title" id="rv-title"></span>
+        <button type="button" class="rv-close" id="rv-close" aria-label="로드뷰 닫기">✕</button>
+      </div>
+      <div class="rv-view" id="rv-view"></div>
+      <p class="rv-empty" id="rv-empty" hidden>이 위치 근처에는 로드뷰가 없어요</p>
+    </div>
 
     <button class="locate-fab" type="button" id="locate-btn" aria-label="현재 위치로 이동">⌖</button>
     <button class="list-fab" type="button" id="list-fab">목록으로 보기</button>
@@ -75,7 +84,6 @@
 
   const activeKeys = new Set(); // 중복 선택된 조건 (비어 있으면 전체)
   let allToilets = [];
-  let extraToilets = [];
   let loadFailed = false;
 
   /* ---------- 칩 필터 (지도 위 / 목록 시트 위 두 줄을 동기화) ---------- */
@@ -105,7 +113,7 @@
 
   /* ---------- 목록 + 핀 (공공데이터 JSON + 카카오 검색 추가분) ---------- */
   const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  const allItems = () => allToilets.concat(extraToilets);
+  const allItems = () => allToilets;
 
   function filtered() {
     const q = searchInput.value.trim().toLowerCase();
@@ -118,7 +126,6 @@
   }
 
   function badgesHtml(t) {
-    if (t.source === "kakao") return `<span class="badge">안심 정보 없음</span>`;
     return App.badgesOf(t).slice(0, 3).map((b) => `<span class="badge ok">${b}</span>`).join("");
   }
 
@@ -145,9 +152,8 @@
       return;
     }
     listEl.innerHTML = list.map((t) => {
-      const isKakao = t.source === "kakao";
-      const href = isKakao ? `href="${esc(t.placeUrl)}" target="_blank" rel="noopener"` : `href="pages/detail.html?id=${t.id}"`;
-      const fav = !isKakao && App.isFavorite(t.id);
+      const href = `href="pages/detail.html?id=${t.id}"`;
+      const fav = App.isFavorite(t.id);
       return `
         <div class="toilet-card" style="align-items:center">
           <a ${href} draggable="false" style="display:flex;gap:12px;flex:1;min-width:0">
@@ -158,7 +164,7 @@
               <div class="badge-row">${badgesHtml(t)}</div>
             </div>
           </a>
-          ${isKakao ? "" : `<button class="fav-toggle${fav ? " active" : ""}" type="button" data-id="${t.id}" aria-label="즐겨찾기 토글">${fav ? "★" : "☆"}</button>`}
+          <button class="fav-toggle${fav ? " active" : ""}" type="button" data-id="${t.id}" aria-label="즐겨찾기 토글">${fav ? "★" : "☆"}</button>
         </div>`;
     }).join("");
   }
@@ -168,18 +174,36 @@
   /* ---------- 핀 선택 카드 ---------- */
   const pinCard = document.getElementById("pin-card");
   function showPinCard(t) {
-    const isKakao = t.source === "kakao";
-    const href = isKakao ? `href="${esc(t.placeUrl)}" target="_blank" rel="noopener"` : `href="pages/detail.html?id=${t.id}"`;
+    const href = `href="pages/detail.html?id=${t.id}"`;
     pinCard.innerHTML = `
       <a ${href}>
         <span class="card-name">${esc(t.name)}${App.srcTag(t)}</span>
         <span class="card-dist">${esc(App.distLabel(t))}</span>
         <div class="badge-row">${badgesHtml(t)}</div>
       </a>
-      <span class="pin-card-go">${isKakao ? "카카오맵 ›" : "상세 ›"}</span>`;
+      <button class="pin-card-rv" type="button" id="pin-rv-btn">로드뷰</button>
+      <span class="pin-card-go">상세 ›</span>`;
     pinCard.hidden = false;
+    selected = t;
   }
   const hidePinCard = () => { pinCard.hidden = true; };
+
+  /* ---------- 로드뷰 (카카오맵으로 나가지 않고 이 화면 위에서 보기) ---------- */
+  let selected = null;
+  const rvOverlay = document.getElementById("rv-overlay");
+  const rvView = document.getElementById("rv-view");
+  const rvEmpty = document.getElementById("rv-empty");
+  pinCard.addEventListener("click", async (e) => {
+    if (!e.target.closest("#pin-rv-btn") || !selected) return;
+    e.preventDefault();
+    document.getElementById("rv-title").textContent = selected.name;
+    rvEmpty.hidden = true;
+    rvView.innerHTML = "";
+    rvOverlay.hidden = false;                       // 먼저 보이게 해야 크기가 잡힘
+    const rv = await KakaoMap.openRoadview(rvView, selected);
+    if (!rv) rvEmpty.hidden = false;
+  });
+  document.getElementById("rv-close").addEventListener("click", () => { rvOverlay.hidden = true; rvView.innerHTML = ""; });
 
   listEl.addEventListener("click", (e) => {
     const btn = e.target.closest(".fav-toggle");
@@ -290,6 +314,8 @@
   const noteEl = document.getElementById("map-note");
   try {
     allToilets = await App.loadToilets();
+    document.getElementById("legend-a").lastChild.textContent =
+      App.dataStatus.via === "api" ? "A 서울시 API" : App.dataStatus.via === "json" ? "A 대체 JSON" : "A (불러오기 실패)";
     renderList();
   } catch (err) {
     console.error(err);
@@ -305,22 +331,26 @@
       await KakaoMap.init({
         el: document.getElementById("kakao-map"),
         center: App.GEO.getOrigin(),
-        getKnown: () => allToilets,
         onSelect: showPinCard,
         onMapClick: hidePinCard,
-        onExtras: (list) => {          // 카카오 검색으로 추가된 화장실
-          extraToilets = list;
-          App.GEO.applyDistances(extraToilets);
-          scheduleRender();
-        },
       });
       noteEl.hidden = true;
       renderList();
+      // 상세 페이지에서 지도를 눌러 넘어온 경우: 그 화장실 위치로 이동하고 핀 카드를 보여 준다
+      const focusId = new URLSearchParams(location.search).get("focus");
+      let focused = false;
+      const tryFocus = () => {
+        if (!focusId || focused) return;
+        const t = allToilets.find((x) => x.id === focusId);
+        if (t && KakaoMap.focusOn(t, 3)) { focused = true; showPinCard(t); }
+      };
+      tryFocus();
       // 좌표가 없는 JSON 항목을 주소로 변환 → 변환되는 대로 핀/거리 갱신 → 끝나면 주변 검색 시작
       KakaoMap.geocodeAll(allToilets, () => {
         App.GEO.applyDistances(allToilets);
         scheduleRender();
-      }).then(() => { App.GEO.applyDistances(allToilets); scheduleRender(); });
+        tryFocus();
+      }).then(() => { App.GEO.applyDistances(allToilets); scheduleRender(); tryFocus(); });
     } catch (err) {
       console.error(err);
       noteEl.innerHTML = "지도를 불러오지 못했어요<br><small>키 값과 카카오 콘솔의 사이트 도메인 등록을 확인해 주세요</small>";

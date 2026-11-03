@@ -75,6 +75,8 @@ const App = (() => {
       disabledStalls,
       maleStalls: (r.maleToilet || 0) + (r.maleUrinal || 0) + (r.maleDisabledToilet || 0) + (r.maleDisabledUrinal || 0) + (r.maleChildToilet || 0) + (r.maleChildUrinal || 0),
       femaleStalls: (r.femaleToilet || 0) + (r.femaleDisabledToilet || 0) + (r.femaleChildToilet || 0),
+      maleChild: (r.maleChildToilet || 0) + (r.maleChildUrinal || 0),
+      femaleChild: r.femaleChildToilet || 0,
       hasStepFree: disabledStalls > 0,          // 장애인용 칸이 있으면 '무장애'로 분류
       hasBell: !!r.hasBell,
       hasCctv: !!r.hasCctv,
@@ -86,20 +88,132 @@ const App = (() => {
     };
   }
 
-  async function loadToilets() {
+  /* ---------- A: 서울시 열린데이터광장 '역사공중화장실정보' (tbTrfcSttnToilet) ----------
+     실시간 API를 먼저 시도하고, 안 되면 data/toilets_subway.json(같은 항목명)으로 대신합니다. */
+  const API_BASE = "http://openapi.seoul.go.kr:8088";   // 서울시 API는 http만 지원
+  const SUBWAY_JSON_URL = IN_PAGES ? "../data/toilets_subway.json" : "./data/toilets_subway.json";
+  // A는 서울 전체 역사 화장실을 모두 사용합니다 (범위 제한 없음)
+  const HIDE_SUBWAY_DUP = true;                          // J 중 지하철역 화장실은 A로 대체(숨김). false면 J도 모두 표시
+  const dataStatus = { via: null, reason: "" };          // via: "api" | "json"
+
+  const num = (v) => { const n = parseInt(v, 10); return Number.isFinite(n) ? n : 0; };
+  const yes = (v) => String(v || "").trim().toUpperCase() === "Y";
+
+  function normalizeApi(r) {
+    const addr = String(r.ROAD_ADDRESS || "").trim();
+    const lot = String(r.LOT_ADDRESS || "").trim();
+    // 지역(구): 주소에서 '○○구'를 찾는다 (없으면 '○○시', 그래도 없으면 두 번째 단어)
+    const guOf = (txt) => (txt.match(/(?:^|\s)([가-힣]+구)(?=\s|$)/) || [])[1];
+    const area = guOf(addr) || guOf(lot) || (`${addr} ${lot}`.match(/(?:^|\s)([가-힣]+시)(?=\s|$)/) || [])[1] || (addr.split(" ")[1] || "");
+    const station = String(r.STATION_NAME || "").trim();
+    const gate = String(r.GATE_TYPE || "").trim();
+    const exit = String(r.EXIT_NUMBER || "").trim();
+    const disabled = num(r.MALE_DISABLED_TOILET_COUNT) + num(r.MALE_DISABLED_URINAL_COUNT) + num(r.FEMALE_DISABLED_TOILET_COUNT);
+    const male = num(r.MALE_TOILET_COUNT) + num(r.MALE_URINAL_COUNT) + num(r.MALE_DISABLED_TOILET_COUNT) + num(r.MALE_DISABLED_URINAL_COUNT) + num(r.MALE_CHILD_TOILET_COUNT) + num(r.MALE_CHILD_URINAL_COUNT);
+    const female = num(r.FEMALE_TOILET_COUNT) + num(r.FEMALE_DISABLED_TOILET_COUNT) + num(r.FEMALE_CHILD_TOILET_COUNT);
+    const dM = yes(r.HAS_DIAPER_TABLE_MALE), dMD = yes(r.HAS_DIAPER_TABLE_MALE_DISABLED);
+    const dF = yes(r.HAS_DIAPER_TABLE_FEMALE), dFD = yes(r.HAS_DIAPER_TABLE_FEMALE_DISABLED);
+    const diaperParts = [(dMD || dFD) && "장애인화장실", dM && "남자화장실", dF && "여자화장실"].filter(Boolean);
+    const lat = parseFloat(r.LATITUDE), lng = parseFloat(r.LONGITUDE);
+    const hours = String(r.OPENING_HOURS || "").trim();
+    return {
+      id: "a" + String(r.SN).trim(),
+      source: "api",
+      name: `${station}역(${String(r.LINE_NAME || "").trim()}) ${gate}${exit ? ` · ${exit}번 출구` : ""}`.trim(),
+      area, address: addr || lot, image: "",
+      station, lineName: String(r.LINE_NAME || "").trim(),
+      groundType: String(r.GROUND_TYPE || "").trim(), floor: String(r.FLOOR || "").trim(),
+      gateType: gate, exitNumber: exit, detailLocation: String(r.DETAIL_LOCATION || "").replace(/\s+/g, " ").trim(),
+      remodelingYear: String(r.REMODELING_YEAR || "").trim(),
+      disabledStalls: disabled, maleStalls: male, femaleStalls: female,
+      maleChild: num(r.MALE_CHILD_TOILET_COUNT) + num(r.MALE_CHILD_URINAL_COUNT),
+      femaleChild: num(r.FEMALE_CHILD_TOILET_COUNT),
+      hasStepFree: disabled > 0,
+      hasBell: yes(r.HAS_EMERGENCY_BELL), bellLocation: null,
+      hasCctv: yes(r.HAS_ENTRANCE_CCTV),
+      hasDiaperTable: diaperParts.length > 0, diaperTableLocation: diaperParts.join("+") || null,
+      safetyFacilityTarget: null,
+      isUnisex: yes(r.IS_UNISEX), genderSeparated: !yes(r.IS_UNISEX),
+      openHours: hours,
+      ...parseHours(hours),
+      updatedAt: String(r.DATA_DATE || "").trim(),
+      status: "api",
+      lat: Number.isFinite(lat) ? lat : null, lng: Number.isFinite(lng) ? lng : null, distanceM: null,
+    };
+  }
+
+  async function fetchApiRows() {
+    const key = (window.SEOUL_API_KEY || "").trim();
+    if (!key) throw new Error("서울시 API 키가 비어 있음");
+    if (location.protocol === "https:") throw new Error("https 페이지에서는 http API 호출이 브라우저에 막힘(혼합 콘텐츠)");
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 7000);
+    try {
+      const res = await fetch(`${API_BASE}/${encodeURIComponent(key)}/json/tbTrfcSttnToilet/1/1000/`, { signal: ctrl.signal });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const body = await res.json();
+      const root = body.tbTrfcSttnToilet;
+      const code = root && root.RESULT && root.RESULT.CODE;
+      if (!root || !Array.isArray(root.row) || (code && code !== "INFO-000")) throw new Error("API 응답 오류 " + (code || ""));
+      return root.row;
+    } finally { clearTimeout(timer); }
+  }
+  async function loadSubwayRows() {
+    try {
+      const rows = await fetchApiRows();
+      dataStatus.via = "api"; dataStatus.reason = "";
+      return rows;
+    } catch (err) {
+      console.warn("[App] 서울시 API를 쓰지 못해 대체 JSON(data/toilets_subway.json)으로 불러옵니다:", err.message || err);
+      const res = await fetch(SUBWAY_JSON_URL);
+      if (!res.ok) throw new Error("subway json " + res.status);
+      dataStatus.via = "json"; dataStatus.reason = String(err.message || err);
+      return res.json();
+    }
+  }
+
+  /* J(공공화장실 JSON) 중 지하철역 화장실은 A의 자세한 정보로 대체 (이름이 '○○역(…)'으로 시작하는 것) */
+  function isSubwayDup(t, stations) {
+    const m = String(t.name).match(/^(.+?)역\s*(\(|화장실|공중화장실|$)/);
+    if (!m) return false;
+    const st = m[1] === "DDP" ? "동대문역사문화공원" : m[1];
+    return stations.has(st);
+  }
+
+  let loading = null;
+  function loadToilets() {
+    if (!loading) {
+      loading = (async () => {
+        const [j, a] = await Promise.allSettled([loadJson(), loadSubwayRows()]);
+        if (j.status === "rejected" && a.status === "rejected") throw j.reason;
+        const jList = j.status === "fulfilled" ? j.value : [];
+        const aList = a.status === "fulfilled" ? a.value.map(normalizeApi) : [];
+        if (a.status === "rejected") { dataStatus.via = null; dataStatus.reason = String(a.reason); }
+        const stations = new Set(aList.map((t) => t.station));
+        const list = jList.filter((t) => !HIDE_SUBWAY_DUP || !isSubwayDup(t, stations)).concat(aList);
+        GEO.applyCache(list);
+        GEO.applyDistances(list);
+        return list;
+      })().catch((e) => { loading = null; throw e; });
+    }
+    return loading;
+  }
+  async function loadJson() {
     const res = await fetch(DATA_URL);
     if (!res.ok) throw new Error("bad response");
     const data = await res.json();
     if (!Array.isArray(data) || data.length === 0) throw new Error("empty");
-    const list = data.map(normalize);
-    GEO.applyCache(list);
-    GEO.applyDistances(list);
-    return list;
+    return data.map(normalize);
   }
+  /* 카드에 쓰는 '지역 · 도보 N분' 문구 (좌표를 아직 모르면 지역만 표시) */
+  function distLabel(t) {
+    return t.distanceM == null ? `${t.area || ""}` : `${t.area || ""} · 도보 ${Math.max(1, Math.round(t.distanceM / 70))}분`;
+  }
+
   /* 출처 표시: J = 공공데이터 JSON, A = 카카오 API 검색 */
   function srcTag(t) {
-    return t.source === "kakao"
-      ? `<span class="src-tag src-a" title="카카오 API 검색 결과">A</span>`
+    return t.source === "api"
+      ? `<span class="src-tag src-a" title="서울시 API (지하철 역사 화장실)">A</span>`
       : `<span class="src-tag src-j" title="공공데이터 JSON">J</span>`;
   }
   /* 남/여 아이콘 (남=파랑, 여=분홍) */
@@ -274,7 +388,7 @@ const App = (() => {
 
   return {
     IN_PAGES, pageUrl, HOME_URL,
-    loadToilets, distLabel, GEO, srcTag, placeHtml, MALE_ICON, FEMALE_ICON,
+    loadToilets, distLabel, GEO, dataStatus, srcTag, placeHtml, MALE_ICON, FEMALE_ICON,
     getFavorites, isFavorite, toggleFavorite,
     getRecent, addRecent, relativeTime,
     badgesOf, isOpenNow,

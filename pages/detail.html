@@ -18,7 +18,15 @@
   </header>
 
   <main class="content no-tabbar" id="content">
-    <div class="hero-img thumb" id="hero">이미지</div>
+    <div class="hero-wrap">
+      <div class="hero-img thumb" id="hero">이미지</div>
+      <div class="hero-rv" id="hero-rv" hidden></div>
+      <div class="hero-tabs" id="hero-tabs" hidden>
+        <button type="button" class="on" data-m="map">지도</button>
+        <button type="button" data-m="rv">로드뷰</button>
+      </div>
+      <div class="hero-msg" id="hero-msg" hidden>이 위치 근처에는 로드뷰가 없어요</div>
+    </div>
 
     <div class="toast" id="toast" hidden>
       <span>즐겨찾기에 저장했습니다</span>
@@ -33,8 +41,9 @@
     <section>
       <div class="section-title" style="margin-bottom:6px">보조 정보</div>
       <div class="info-row"><span class="label">주소</span><span id="v-address">-</span></div>
-      <div class="info-row"><span class="label">남녀구분</span><span id="v-gender" class="gi-row">-</span></div>
+      <div id="info-extra"></div>
       <div class="info-row"><span class="label">변기 수</span><span id="v-count" class="gi-row">-</span></div>
+      <div class="info-row"><span class="label">유아용 변기</span><span id="v-child" class="gi-row">-</span></div>
       <div class="info-row"><span class="label">정보 갱신일</span><span id="v-updated">-</span></div>
     </section>
 
@@ -49,7 +58,9 @@
   </div>
 </div>
 
+<script src="../js/config.js"></script>
 <script src="../js/app.js"></script>
+<script src="../js/kakao-map.js"></script>
 <script>
 (async function () {
   const id = new URLSearchParams(location.search).get("id");
@@ -70,17 +81,67 @@
       <div class="spec"><span class="spec-label">기저귀 교환대</span>${yn(t.hasDiaperTable)}${sub(App.placeHtml(t.diaperTableLocation))}</div>
       <div class="spec"><span class="spec-label">비상벨</span>${yn(t.hasBell)}${sub(App.placeHtml(t.bellLocation))}</div>
       <div class="spec"><span class="spec-label">CCTV</span>${yn(t.hasCctv)}</div>
-      <div class="spec"><span class="spec-label">안심 시설 대상</span>${yn(t.safetyFacilityTarget)}</div>
+      <div class="spec"><span class="spec-label">안심 시설 대상</span>${t.safetyFacilityTarget == null ? `<span class="spec-value no">정보 없음</span>` : yn(t.safetyFacilityTarget)}</div>
       <div class="spec"><span class="spec-label">운영시간</span><span class="spec-value">${t.openHours || "정보 없음"}</span></div>
     `;
     document.getElementById("v-address").textContent = t.address;
-    const hasM = t.maleStalls > 0, hasF = t.femaleStalls > 0;
-    document.getElementById("v-gender").innerHTML =
-      (hasM ? App.MALE_ICON : "") + (hasF ? App.FEMALE_ICON : "") +
-      `<span>${hasM && hasF ? "남녀 분리" : hasM ? "남자 전용" : hasF ? "여자 전용" : "정보 없음"}</span>`;
+    if (t.source === "api") {  // 서울시 API(지하철 역사) 전용 정보
+      const row = (l, v) => (v ? `<div class="info-row"><span class="label">${l}</span><span>${v}</span></div>` : "");
+      document.getElementById("info-extra").innerHTML =
+        row("노선·역", `${t.lineName} ${t.station}역`) +
+        row("위치", [t.groundType && `${t.groundType}${t.floor ? " " + t.floor + "층" : ""}`, t.gateType && `개찰구 ${t.gateType}`, t.exitNumber && `${t.exitNumber}번 출구 부근`].filter(Boolean).join(" · "));
+    }
     document.getElementById("v-count").innerHTML =
       `${App.MALE_ICON}<b>${t.maleStalls}</b><span class="gi-dot">·</span>${App.FEMALE_ICON}<b>${t.femaleStalls}</b>`;
+    // 유아용 변기: 남/여 아이콘으로 개수 표시 (위 '변기 수'에 포함된 개수)
+    document.getElementById("v-child").innerHTML = t.maleChild + t.femaleChild === 0
+      ? `<span class="gi-text">없음</span>`
+      : `${App.MALE_ICON}<b>${t.maleChild}</b><span class="gi-dot">·</span>${App.FEMALE_ICON}<b>${t.femaleChild}</b>`;
     document.getElementById("v-updated").textContent = (t.updatedAt || "").slice(0, 10) || "정보 없음";
+
+    // 위치: 카카오맵을 크게 확대해서 핀을 보여 준다 (키가 없거나 실패하면 기존 자리표시 유지)
+    if (KakaoMap.hasKey()) {
+      const hero = document.getElementById("hero");
+      const placeholder = hero.textContent;
+      hero.textContent = "";
+      hero.classList.remove("thumb");
+      KakaoMap.showOne(hero, t).then((ok) => {
+        if (!ok) return fallbackHero(hero, placeholder);
+        initHeroTabs(t);
+      }).catch(() => fallbackHero(hero, placeholder));
+    }
+    // 지도 ↔ 로드뷰 전환 (우리 화면 안에서 카카오 로드뷰를 띄움)
+    // 지도 영역을 누르면 메인 지도로 이동 (같은 화장실이 가운데에 오도록)
+    document.getElementById("hero").addEventListener("click", () => {
+      location.href = `../index.html?focus=${encodeURIComponent(t.id)}`;
+    });
+    document.getElementById("hero").style.cursor = "pointer";
+
+    function initHeroTabs(t) {
+      const tabs = document.getElementById("hero-tabs");
+      const mapEl = document.getElementById("hero");
+      const rvEl = document.getElementById("hero-rv");
+      const msg = document.getElementById("hero-msg");
+      let rv = null;
+      const setTab = (m) => tabs.querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.m === m));
+      tabs.hidden = false;
+      tabs.addEventListener("click", async (e) => {
+        const b = e.target.closest("button");
+        if (!b) return;
+        if (b.dataset.m === "map") {
+          rvEl.hidden = true; mapEl.hidden = false; setTab("map");
+          return;
+        }
+        rvEl.hidden = false; mapEl.hidden = true; setTab("rv");   // 먼저 보이게 해야 크기가 잡힘
+        if (!rv) rv = await KakaoMap.openRoadview(rvEl, t);
+        else rv.relayout();
+        if (!rv) {                                                // 로드뷰가 없는 위치
+          rvEl.hidden = true; mapEl.hidden = false; setTab("map");
+          msg.hidden = false; setTimeout(() => (msg.hidden = true), 2500);
+        }
+      });
+    }
+    function fallbackHero(hero, text) { hero.innerHTML = ""; hero.classList.add("thumb"); hero.textContent = text; }
 
     const saveBtn = document.getElementById("save-btn");
     function syncSaveBtn() {
