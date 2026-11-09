@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>공공화장실 큐레이터 · 개선 제안</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="app">
+
+  <header class="app-header">
+    <div class="brand-row">Restie</div>
+    <div class="header-row">
+      <span class="header-title" style="font-size:16px">개선 제안</span>
+    </div>
+    <div class="subtab-row" role="tablist" aria-label="제안 유형">
+      <button class="subtab active" type="button" role="tab" aria-selected="true" data-mode="comfort">불편 개선</button>
+      <button class="subtab" type="button" role="tab" aria-selected="false" data-mode="info">정보 수정</button>
+    </div>
+  </header>
+
+  <main class="content" id="content">
+    <p class="pf-intro" id="mode-desc">이용하면서 겪은 불편을 골라 더 나은 화장실로 바꿔 달라고 제안해요. 제출한 제안은 마이에서 확인할 수 있어요.</p>
+
+    <!-- ① 대상 화장실 (공통) -->
+    <section class="sec-card pf-step" aria-labelledby="step1-title">
+      <div class="section-title" id="step1-title"><span class="pf-num">1</span>어느 화장실인가요?</div>
+      <div class="pf-grid">
+        <label class="field"><span>지역</span><select id="area-select"></select></label>
+        <label class="field"><span>화장실 <b id="area-count" style="font-weight:400"></b></span><select id="toilet-select"></select></label>
+      </div>
+      <div id="place-card"></div>
+    </section>
+
+    <!-- ===== 불편 개선 ===== -->
+    <section class="sec-card pf-step mode-comfort" aria-labelledby="c2-title">
+      <div class="section-title" id="c2-title"><span class="pf-num">2</span>누가 이용하나요?</div>
+      <p class="sec-sub">이용 상황을 고르면 이 화장실에서 막힐 수 있는 지점을 공공데이터로 확인해 드려요.</p>
+      <div class="pf-chips" id="persona-chips" role="radiogroup" aria-label="이용 상황"></div>
+      <div id="persona-check" aria-live="polite"></div>
+    </section>
+
+    <section class="sec-card pf-step mode-comfort" aria-labelledby="c3-title">
+      <div class="section-title" id="c3-title"><span class="pf-num">3</span>어떻게 바뀌면 좋을까요?</div>
+      <p class="sec-sub">등록되지 않은 항목에 맞는 개선안에 <b style="color:var(--accent)">추천</b>을 표시했어요. 필요한 것을 모두 골라 주세요.</p>
+      <div class="pf-chips" id="idea-chips" role="group" aria-label="개선 아이디어"></div>
+      <div id="idea-compare" aria-live="polite"></div>
+    </section>
+
+    <section class="sec-card pf-step mode-comfort" aria-labelledby="c4-title">
+      <div class="section-title" id="c4-title"><span class="pf-num">4</span>제안 내용을 확인해요</div>
+      <label class="field"><span>제안 내용 · 고른 내용으로 자동 작성돼요. 직접 고쳐도 돼요.</span>
+        <textarea id="comfort-text" rows="8"></textarea>
+      </label>
+      <label class="pf-photo" for="comfort-photo">
+        <input id="comfort-photo" type="file" accept="image/*" capture="environment" hidden>
+        <span id="comfort-photo-prompt">📷 현장 사진 첨부 (선택)</span>
+        <img id="comfort-photo-img" alt="첨부한 현장 사진" hidden>
+      </label>
+      <button type="button" class="pf-photo-remove" id="comfort-photo-remove" hidden>사진 삭제</button>
+      <p class="dash-note">얼굴이나 개인정보가 보이는 사진은 첨부하지 마세요. 이 버전에서는 사진 자체는 저장하지 않고 첨부 여부만 기록해요.</p>
+      <p class="form-error" id="comfort-error" role="alert" hidden></p>
+      <button type="button" class="btn-primary" id="comfort-submit">개선 제안 제출하기</button>
+    </section>
+
+    <!-- ===== 정보 수정 ===== -->
+    <section class="sec-card pf-step mode-info" aria-labelledby="i2-title" hidden>
+      <div class="section-title" id="i2-title"><span class="pf-num">2</span>어떤 정보가 실제와 다른가요?</div>
+      <p class="sec-sub">고칠 항목을 하나 골라 주세요.</p>
+      <div class="pf-chips" id="info-items" role="radiogroup" aria-label="고칠 정보 항목"></div>
+    </section>
+
+    <section class="sec-card pf-step mode-info" aria-labelledby="i3-title" hidden>
+      <div class="section-title" id="i3-title"><span class="pf-num">3</span>실제 정보를 알려 주세요</div>
+      <div id="info-input" style="display:flex;flex-direction:column;gap:10px"></div>
+    </section>
+
+    <section class="sec-card pf-step mode-info" aria-labelledby="i4-title" hidden>
+      <div class="section-title" id="i4-title"><span class="pf-num">4</span>언제 확인했나요?</div>
+      <label class="field"><span>확인한 날짜</span><input id="info-date" type="date"></label>
+      <label class="pf-photo" for="info-photo">
+        <input id="info-photo" type="file" accept="image/*" capture="environment" hidden>
+        <span id="info-photo-prompt">📷 확인 사진 첨부 (선택)</span>
+        <img id="info-photo-img" alt="첨부한 확인 사진" hidden>
+      </label>
+      <button type="button" class="pf-photo-remove" id="info-photo-remove" hidden>사진 삭제</button>
+      <p class="dash-note">담당자가 확인하기 전까지는 공식 정보로 표시되지 않아요. 사람이 보이는 사진은 첨부하지 마세요.</p>
+      <p class="form-error" id="info-error" role="alert" hidden></p>
+      <button type="button" class="btn-primary" id="info-submit">정보 수정 제안 제출하기</button>
+    </section>
+
+    <p class="dash-note">※ 데모 버전이라 제안은 이 브라우저에만 저장돼요. 실서비스에서는 위치·사진 제보 동의, 검토 절차, 허위 제보 대응, 개인정보 보호 기준을 따로 마련해야 합니다.</p>
+
+    <div class="state-block" id="error-state" hidden>
+      <div class="state-icon">⟳</div>
+      <div class="state-title">화장실 정보를 불러오지 못했습니다</div>
+      <div class="state-sub">네트워크 상태를 확인한 뒤 다시 시도해 주세요</div>
+      <button class="btn-secondary" type="button" onclick="location.reload()">다시 시도</button>
+    </div>
+  </main>
+
+  <nav class="app-tabbar" id="tabbar-root" aria-label="주요 메뉴"></nav>
+</div>
+
+<script src="../js/app.js"></script>
+<script>
+(async function () {
+  App.renderTabbar(document.getElementById("tabbar-root"), "propose");
+  const esc = App.esc;
+  const $ = (id) => document.getElementById(id);
+  const params = new URLSearchParams(location.search);
+
+  /* ---------- 공공데이터로 확인하는 항목 ----------
+     공공데이터에는 '없음'과 '미확인'이 구분되지 않아서, 등록되지 않은 항목은 "없거나 확인되지 않음"으로 안내합니다. */
+  const child = (t) => (t.maleChild || 0) + (t.femaleChild || 0) > 0;
+  const CHECKS = {
+    stepfree: { has: (t) => t.hasStepFree, ok: (t) => `장애인용 칸이 ${t.disabledStalls}칸 등록돼 있어요.`, miss: "장애인용 칸이 등록돼 있지 않아 들어가서 쓸 수 있는지 알 수 없어요." },
+    diaper:   { has: (t) => t.hasDiaperTable, ok: (t) => `기저귀 교환대가 등록돼 있어요${t.diaperTableLocation ? ` (${t.diaperTableLocation.replaceAll("+", ", ")})` : ""}.`, miss: "기저귀 교환대가 등록돼 있지 않아 도착한 뒤 다른 곳을 찾아야 할 수 있어요." },
+    child:    { has: child, ok: () => "어린이용 변기가 등록돼 있어요.", miss: "어린이용 변기가 등록돼 있지 않아요." },
+    bell:     { has: (t) => t.hasBell, ok: () => "비상벨이 등록돼 있어요.", miss: "비상벨이 등록돼 있지 않아 위급할 때 도움을 요청하기 어려울 수 있어요." },
+    cctv:     { has: (t) => t.hasCctv, ok: () => "입구 CCTV가 등록돼 있어요.", miss: "입구 CCTV가 등록돼 있지 않아 밤에는 불안할 수 있어요." },
+    h24:      { has: (t) => App.isOpenNow(t), ok: () => "24시간 이용할 수 있어요.", miss: (t) => t.openTime ? `${t.hoursLabel}에만 열려 있어 늦은 시간에는 이용하기 어려워요.` : "운영시간이 정확히 등록돼 있지 않아 헛걸음할 수 있어요." },
+  };
+  const IDEAS = {
+    ramp:     { label: "입구 턱 제거·경사로", after: "휠체어·유모차로 막힘 없이 들어갈 수 있어요." },
+    route:    { label: "접근 경로 안내", after: "입구까지 턱·경사·엘리베이터 정보를 미리 확인해요." },
+    door:     { label: "자동·미닫이 출입문", after: "혼자서도 문을 쉽게 열고 들어가요." },
+    handrail: { label: "손잡이 설치", after: "앉고 일어날 때 몸을 지탱할 수 있어요." },
+    diaper:   { label: "기저귀 교환대 설치", after: "교환대 위치를 알고 바로 이용해요." },
+    diaperM:  { label: "남자화장실에도 교환대", after: "아빠 보호자도 혼자 아이를 돌볼 수 있어요." },
+    childSeat:{ label: "어린이용 변기·유아 의자", after: "아이와 함께 편하게 이용해요." },
+    bell:     { label: "비상벨 설치·작동 점검", after: "위급할 때 바로 도움을 요청할 수 있어요." },
+    cctv:     { label: "입구 CCTV 설치", after: "입구 주변이 지켜지고 있어 안심돼요." },
+    light:    { label: "야간 조명 개선", after: "밤에도 밝고 안전하게 이동해요." },
+    camCheck: { label: "불법촬영 정기 점검", after: "점검 결과를 보고 안심하고 이용해요." },
+    hours:    { label: "운영시간 연장·정보 갱신", after: "열려 있는지 확인하고 헛걸음 없이 방문해요." },
+    seat:     { label: "대기·휴식용 의자", after: "오래 서 있지 않고 기다릴 수 있어요." },
+    sign:     { label: "안내 표지 개선", after: "입구와 내부 동선을 쉽게 찾아요." },
+    clean:    { label: "청소·위생용품 비치", after: "깨끗하고 필요한 용품이 있어 편하게 써요." },
+  };
+  const CHECK_TO_IDEA = { stepfree: "ramp", diaper: "diaper", child: "childSeat", bell: "bell", cctv: "cctv", h24: "hours" };
+  /* 이용 상황 (대시보드의 사용자 유형과 같은 아이콘·이름) */
+  const PERSONAS = {
+    wheel:  { ico: "♿", name: "휠체어·보행보조", checks: ["stepfree", "bell"], ideas: ["ramp", "route", "door", "handrail", "bell", "sign"] },
+    infant: { ico: "👶", name: "영유아 동반 보호자", checks: ["diaper", "child", "stepfree"], ideas: ["diaper", "diaperM", "childSeat", "ramp", "sign"] },
+    safe:   { ico: "🌙", name: "야간 귀가자·여성", checks: ["bell", "cctv", "h24"], ideas: ["bell", "cctv", "light", "camCheck", "hours"] },
+    senior: { ico: "🤰", name: "임산부·노약자", checks: ["stepfree", "bell"], ideas: ["ramp", "handrail", "seat", "bell", "sign"] },
+    urgent: { ico: "⏱️", name: "급한 이용 수요", checks: ["h24"], ideas: ["hours", "sign", "route"] },
+    etc:    { ico: "💬", name: "기타 이용자", checks: [], ideas: ["clean", "sign", "light", "hours"] },
+  };
+  /* 정보 수정 항목 */
+  const INFO_ITEMS = {
+    stepfree: { label: "장애인화장실", type: "yn" },
+    diaper:   { label: "기저귀 교환대", type: "yn" },
+    bell:     { label: "비상벨", type: "yn" },
+    cctv:     { label: "CCTV", type: "yn" },
+    hours:    { label: "운영시간", type: "text", ph: "예: 06:00~23:00" },
+    location: { label: "위치·주소", type: "text", ph: "예: 지하 1층 · 3번 출구 옆" },
+    stalls:   { label: "변기 수", type: "count" },
+    broken:   { label: "청소·고장", type: "issue", opts: ["청소도구 적치", "시설 고장", "청결 불량", "기타"] },
+  };
+  function currentValue(t, key) {
+    switch (key) {
+      case "stepfree": return t.hasStepFree ? `있음 (장애인용 ${t.disabledStalls}칸)` : "";
+      case "diaper": return t.hasDiaperTable ? "있음" : "";
+      case "bell": return t.hasBell ? "있음" : "";
+      case "cctv": return t.hasCctv ? "있음" : "";
+      case "hours": return t.openHours || "";
+      case "location": return [t.address, t.detailLocation].filter(Boolean).join(" · ");
+      case "stalls": return `남 ${t.maleStalls} · 여 ${t.femaleStalls}`;
+      default: return null;  // 청소·고장은 현재 값이 없음
+    }
+  }
+
+  /* ---------- 상태 ---------- */
+  let toilets = [];
+  let mode = params.get("mode") === "info" ? "info" : "comfort";
+  let area = "all", toiletId = null;
+  let persona = null, ideas = new Set(), textEdited = false;
+  let infoItem = INFO_ITEMS[params.get("item")] ? params.get("item") : null, infoActual = "";
+  const photo = { comfort: false, info: false };
+  const current = () => toilets.find((t) => t.id === toiletId) || null;
+  const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+
+  /* ---------- 데이터 ---------- */
+  try {
+    toilets = await App.loadToilets();
+  } catch (err) {
+    console.error(err);
+    document.querySelectorAll(".pf-step").forEach((s) => (s.hidden = true));
+    $("error-state").hidden = false;
+    return;
+  }
+
+  /* ---------- ① 화장실 선택 ---------- */
+  const areaSel = $("area-select"), toiletSel = $("toilet-select");
+  const areas = Object.entries(toilets.reduce((m, t) => ((m[t.area || "기타"] = (m[t.area || "기타"] || 0) + 1), m), {}))
+    .sort((a, b) => a[0].localeCompare(b[0], "ko"));
+  areaSel.innerHTML = `<option value="all">전체 지역</option>` + areas.map(([a, n]) => `<option value="${esc(a)}">${esc(a)} (${n})</option>`).join("");
+
+  function fillToilets() {
+    const list = toilets.filter((t) => area === "all" || (t.area || "기타") === area)
+      .sort((a, b) => a.name.localeCompare(b.name, "ko"));
+    $("area-count").textContent = `${list.length}곳`;
+    toiletSel.innerHTML = `<option value="">화장실을 골라 주세요</option>` +
+      list.map((t) => `<option value="${t.id}">${esc(t.name)}${t.source === "api" ? " [A]" : ""}</option>`).join("");
+    if (toiletId && list.some((t) => t.id === toiletId)) toiletSel.value = toiletId;
+    else toiletId = null;
+  }
+  areaSel.addEventListener("change", () => { area = areaSel.value; fillToilets(); onToiletChange(); });
+  toiletSel.addEventListener("change", () => { toiletId = toiletSel.value || null; onToiletChange(); });
+
+  function onToiletChange() {
+    if (persona) autoIdeas();
+    textEdited = false;
+    renderAll();
+  }
+
+  function renderPlace() {
+    const t = current(), box = $("place-card");
+    if (!t) { box.innerHTML = `<div class="pf-empty">지역과 화장실을 고르면 등록된 정보를 보여 드려요.</div>`; return; }
+    const badges = App.badgesOf(t);
+    box.innerHTML = `
+      <div class="pf-place">
+        <div class="thumb">이미지</div>
+        <div class="card-body">
+          <span class="card-name">${esc(t.name)}${App.srcTag(t)}</span>
+          <span class="card-dist">${esc(App.distLabel(t))} · ${esc(t.hoursLabel)}</span>
+          <div class="badge-row">${badges.length ? badges.map((b) => `<span class="badge ok">${b}</span>`).join("") : `<span class="badge">등록된 편의시설 없음</span>`}</div>
+        </div>
+        <a class="text-btn" href="./detail.html?id=${encodeURIComponent(t.id)}">상세</a>
+      </div>`;
+  }
+
+  /* ---------- 불편 개선 ---------- */
+  function autoIdeas() {
+    const t = current(), p = PERSONAS[persona];
+    ideas = new Set();
+    if (!t || !p) return;
+    p.checks.forEach((k) => { const idea = CHECK_TO_IDEA[k]; if (!CHECKS[k].has(t) && p.ideas.includes(idea)) ideas.add(idea); });
+  }
+  const recommended = () => {
+    const t = current(), p = PERSONAS[persona];
+    return new Set(t && p ? p.checks.filter((k) => !CHECKS[k].has(t)).map((k) => CHECK_TO_IDEA[k]) : []);
+  };
+  const issuesOf = (t, p) => p.checks.map((k) => {
+    const ok = !!CHECKS[k].has(t), c = CHECKS[k];
+    const text = ok ? c.ok(t) : (typeof c.miss === "function" ? c.miss(t) : c.miss);
+    return { k, ok, text };
+  });
+
+  function renderComfort() {
+    $("persona-chips").innerHTML = Object.entries(PERSONAS).map(([k, p]) =>
+      `<button type="button" class="chip${persona === k ? " active" : ""}" role="radio" aria-checked="${persona === k}" data-p="${k}">${p.ico} ${p.name}</button>`).join("");
+
+    const t = current(), p = PERSONAS[persona];
+    const check = $("persona-check"), ideaEl = $("idea-chips"), cmp = $("idea-compare");
+    if (!t || !p) {
+      check.innerHTML = `<div class="pf-empty">${!t ? "1단계에서 화장실을 먼저 골라 주세요." : "이용 상황을 골라 주세요."}</div>`;
+      ideaEl.innerHTML = `<div class="pf-empty" style="width:100%">2단계까지 고르면 개선안이 나타나요.</div>`;
+      cmp.innerHTML = "";
+      updateText();
+      return;
+    }
+    const issues = issuesOf(t, p), bad = issues.filter((x) => !x.ok).length;
+    check.innerHTML = p.checks.length === 0
+      ? `<div class="pf-empty">공공데이터로 미리 확인할 수 있는 항목이 없어요. 3단계에서 개선안을 고르고 내용을 적어 주세요.</div>`
+      : `<p class="pf-summary">${bad ? `${p.name}에게 막힐 수 있는 지점이 ${bad}곳 있어요` : `${p.name}에게 필요한 정보가 모두 등록돼 있어요`}</p>` +
+        issues.map((x) => `<div class="pf-issue ${x.ok ? "ok" : "warn"}" style="margin-top:6px"><b aria-hidden="true">${x.ok ? "✓" : "!"}</b><span>${esc(x.text)}</span></div>`).join("");
+
+    const rec = recommended();
+    ideaEl.innerHTML = p.ideas.map((k) =>
+      `<button type="button" class="chip${ideas.has(k) ? " active" : ""}" aria-pressed="${ideas.has(k)}" data-idea="${k}">${IDEAS[k].label}${rec.has(k) ? `<span class="rec">추천</span>` : ""}</button>`).join("");
+    const before = issues.filter((x) => !x.ok).map((x) => x.text);
+    const after = [...ideas].map((k) => IDEAS[k].after);
+    cmp.innerHTML = `
+      <div class="pf-compare">
+        <div><div class="lbl">지금 이용하면</div><ul>${(before.length ? before : ["등록된 정보로는 큰 불편이 없지만, 현장 확인이 더 필요해요."]).map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>
+        <div class="after"><div class="lbl">개선된 후에는</div><ul>${(after.length ? after : ["개선안을 골라 주세요."]).map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>
+      </div>`;
+    updateText();
+  }
+
+  $("persona-chips").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-p]");
+    if (!b) return;
+    persona = b.dataset.p;
+    autoIdeas(); textEdited = false; hideError("comfort");
+    renderComfort();
+  });
+  $("idea-chips").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-idea]");
+    if (!b) return;
+    const k = b.dataset.idea;
+    ideas.has(k) ? ideas.delete(k) : ideas.add(k);
+    textEdited = false; hideError("comfort");
+    renderComfort();
+  });
+
+  /* ④ 제안 내용 자동 작성 (직접 고친 뒤에는 덮어쓰지 않음) */
+  const textEl = $("comfort-text");
+  textEl.addEventListener("input", () => { textEdited = true; });
+  function updateText() {
+    if (textEdited) return;
+    const t = current(), p = PERSONAS[persona];
+    if (!t || !p) { textEl.value = ""; textEl.placeholder = "1~3단계를 고르면 제안 내용이 자동으로 작성돼요."; return; }
+    const issues = issuesOf(t, p).filter((x) => !x.ok).map((x) => "- " + x.text);
+    const list = [...ideas].map((k) => "- " + IDEAS[k].label);
+    textEl.value = `[대상] ${t.name} (${t.area})\n[이용 상황] ${p.name}\n[현재 불편]\n${issues.join("\n") || "- 현장에서 겪은 불편을 적어 주세요."}\n[개선 요청]\n${list.join("\n") || "- "}\n[덧붙이는 말] `;
+  }
+
+  /* ---------- 정보 수정 ---------- */
+  function renderInfo() {
+    $("info-items").innerHTML = Object.entries(INFO_ITEMS).map(([k, v]) =>
+      `<button type="button" class="chip${infoItem === k ? " active" : ""}" role="radio" aria-checked="${infoItem === k}" data-item="${k}">${v.label}</button>`).join("");
+    const t = current(), box = $("info-input");
+    if (!t) { box.innerHTML = `<div class="pf-empty">1단계에서 화장실을 먼저 골라 주세요.</div>`; return; }
+    if (!infoItem) { box.innerHTML = `<div class="pf-empty">2단계에서 고칠 항목을 골라 주세요.</div>`; return; }
+    const it = INFO_ITEMS[infoItem], cur = currentValue(t, infoItem);
+    let html = "";
+    if (cur !== null) html += `<div class="pf-current"><span>현재 등록된 정보</span><b class="${cur ? "" : "none"}">${esc(cur || "정보 없음")}</b></div><div class="pf-arrow" aria-hidden="true">↓</div>`;
+    if (it.type === "yn" || it.type === "issue") {
+      const opts = it.type === "yn" ? ["있음", "없음"] : it.opts;
+      html += `<div class="section-title" style="font-size:12px;color:var(--sub);font-weight:600">${it.type === "yn" ? "실제로는" : "어떤 문제인가요?"}</div>
+        <div class="pf-chips" role="radiogroup" aria-label="실제 정보">${opts.map((v) => `<button type="button" class="chip${infoActual === v ? " active" : ""}" role="radio" aria-checked="${infoActual === v}" data-actual="${v}">${v}</button>`).join("")}</div>`;
+      if (infoItem === "stepfree") html += `<label class="field"><span>장애인용 칸 수 (선택)</span><input id="info-extra" type="number" min="0" inputmode="numeric" placeholder="예: 1"></label>`;
+    } else if (it.type === "text") {
+      html += `<label class="field"><span>실제 ${it.label}</span><input id="info-text" type="text" placeholder="${it.ph}"></label>`;
+    } else if (it.type === "count") {
+      html += `<div class="pf-counts"><label class="field">남<input id="info-cnt-m" type="number" min="0" inputmode="numeric" placeholder="0"></label><label class="field">여<input id="info-cnt-f" type="number" min="0" inputmode="numeric" placeholder="0"></label></div>`;
+    }
+    html += `<label class="field"><span>설명${it.type === "issue" ? "" : " (선택)"}</span><textarea id="info-memo" rows="3" placeholder="${it.type === "issue" ? "예: 장애인 칸 안에 청소도구가 쌓여 있어 들어갈 수 없어요." : "확인한 내용을 덧붙여 주세요."}"></textarea></label>`;
+    box.innerHTML = html;
+  }
+  $("info-items").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-item]");
+    if (!b) return;
+    infoItem = b.dataset.item; infoActual = ""; hideError("info");
+    renderInfo();
+  });
+  $("info-input").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-actual]");
+    if (!b) return;
+    infoActual = b.dataset.actual;
+    $("info-input").querySelectorAll("[data-actual]").forEach((x) => {
+      const on = x.dataset.actual === infoActual;
+      x.classList.toggle("active", on); x.setAttribute("aria-checked", String(on));
+    });
+  });
+  $("info-date").value = today();
+  $("info-date").max = today();
+
+  /* ---------- 사진 첨부 (미리보기만) ---------- */
+  function setupPhoto(kind) {
+    const input = $(`${kind}-photo`), img = $(`${kind}-photo-img`), prompt = $(`${kind}-photo-prompt`), rm = $(`${kind}-photo-remove`);
+    input.addEventListener("change", () => {
+      const file = input.files && input.files[0];
+      if (!file) return;
+      const r = new FileReader();
+      r.onload = () => { img.src = r.result; img.hidden = false; prompt.hidden = true; rm.hidden = false; photo[kind] = true; };
+      r.readAsDataURL(file);
+    });
+    rm.addEventListener("click", () => { img.hidden = true; img.removeAttribute("src"); input.value = ""; prompt.hidden = false; rm.hidden = true; photo[kind] = false; });
+  }
+  setupPhoto("comfort");
+  setupPhoto("info");
+
+  /* ---------- 오류 표시 ---------- */
+  function showError(kind, msg, focusEl) {
+    const el = $(`${kind}-error`);
+    el.textContent = msg; el.hidden = false;
+    if (focusEl) focusEl.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+  const hideError = (kind) => { $(`${kind}-error`).hidden = true; };
+
+  /* ---------- 제출 ---------- */
+  function done(item) {
+    if (!item) { alert("저장 공간이 부족해 제안을 저장하지 못했어요."); return; }
+    location.href = "./mypage.html?tab=proposals&submitted=1";
+  }
+  $("comfort-submit").addEventListener("click", () => {
+    const t = current();
+    if (!t) return showError("comfort", "제안할 화장실을 먼저 골라 주세요.", toiletSel);
+    if (!persona) return showError("comfort", "이용 상황을 골라 주세요.", $("persona-chips"));
+    if (!ideas.size) return showError("comfort", "개선안을 하나 이상 골라 주세요.", $("idea-chips"));
+    const body = textEl.value.trim();
+    if (!body) return showError("comfort", "제안 내용을 적어 주세요.", textEl);
+    const list = [...ideas].map((k) => IDEAS[k].label);
+    done(App.Proposals.add({
+      kind: "comfort", toiletId: t.id, toiletName: t.name, area: t.area,
+      title: `${t.name} · ${list[0]}${list.length > 1 ? ` 외 ${list.length - 1}건` : ""}`,
+      persona: PERSONAS[persona].name, ideas: list, body, hasPhoto: photo.comfort,
+    }));
+  });
+  $("info-submit").addEventListener("click", () => {
+    const t = current();
+    if (!t) return showError("info", "제안할 화장실을 먼저 골라 주세요.", toiletSel);
+    if (!infoItem) return showError("info", "고칠 정보 항목을 골라 주세요.", $("info-items"));
+    const it = INFO_ITEMS[infoItem];
+    const memo = ($("info-memo")?.value || "").trim();
+    let actual = infoActual;
+    if (it.type === "text") actual = ($("info-text").value || "").trim();
+    if (it.type === "count") {
+      const m = $("info-cnt-m").value, f = $("info-cnt-f").value;
+      actual = m !== "" || f !== "" ? `남 ${m || 0} · 여 ${f || 0}` : "";
+    }
+    if (infoItem === "stepfree" && actual === "있음") { const n = ($("info-extra").value || "").trim(); if (n) actual = `있음 (장애인용 ${n}칸)`; }
+    if (!actual) return showError("info", it.type === "issue" ? "문제 유형을 골라 주세요." : "실제 정보를 입력해 주세요.", $("info-input"));
+    if (it.type === "issue" && !memo) return showError("info", "어떤 상황인지 설명을 적어 주세요.", $("info-memo"));
+    const cur = currentValue(t, infoItem);
+    const checkedDate = $("info-date").value || today();
+    done(App.Proposals.add({
+      kind: "info", toiletId: t.id, toiletName: t.name, area: t.area,
+      title: `${t.name} · ${it.label} ${it.type === "issue" ? "제보" : "정보 수정"}`,
+      item: it.label, current: cur === null ? "" : (cur || "정보 없음"), actual, checkedDate, hasPhoto: photo.info,
+      body: [cur !== null && `현재: ${cur || "정보 없음"}`, `실제: ${actual}`, `확인일: ${checkedDate}`, memo && `설명: ${memo}`].filter(Boolean).join("\n"),
+    }));
+  });
+
+  /* ---------- 모드 전환 ---------- */
+  const DESC = {
+    comfort: "이용하면서 겪은 불편을 골라 더 나은 화장실로 바꿔 달라고 제안해요. 제출한 제안은 마이에서 확인할 수 있어요.",
+    info: "등록된 화장실 정보가 실제와 다르거나 청소·고장 문제가 있으면 알려 주세요. 담당자가 확인한 뒤 반영돼요.",
+  };
+  function setMode(m) {
+    mode = m;
+    document.querySelectorAll(".subtab[data-mode]").forEach((b) => {
+      const on = b.dataset.mode === m;
+      b.classList.toggle("active", on); b.setAttribute("aria-selected", String(on));
+    });
+    document.querySelectorAll(".mode-comfort").forEach((s) => (s.hidden = m !== "comfort"));
+    document.querySelectorAll(".mode-info").forEach((s) => (s.hidden = m !== "info"));
+    $("mode-desc").textContent = DESC[m];
+    renderAll();
+  }
+  document.querySelectorAll(".subtab[data-mode]").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
+
+  function renderAll() {
+    renderPlace();
+    if (mode === "comfort") renderComfort(); else renderInfo();
+  }
+
+  /* ---------- 시작: ?id= 로 들어오면 그 화장실을 미리 선택 ---------- */
+  const preset = toilets.find((t) => t.id === params.get("id"));
+  if (preset) { area = preset.area || "기타"; toiletId = preset.id; areaSel.value = area; }
+  fillToilets();
+  setMode(mode);
+})();
+</script>
+</body>
+</html>

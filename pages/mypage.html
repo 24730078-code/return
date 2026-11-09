@@ -17,17 +17,22 @@
     <div class="subtab-row">
       <button class="subtab active" type="button" data-tab="favorites">즐겨찾기 <span id="fav-count"></span></button>
       <button class="subtab" type="button" data-tab="recent">최근 본 공간</button>
+      <button class="subtab" type="button" data-tab="proposals">내 제안 <span id="prop-count"></span></button>
     </div>
   </header>
 
   <main class="content" id="content">
     <section class="account" id="account" aria-label="계정"></section>
+    <div class="toast" id="submit-toast" hidden>
+      <span>제안을 제출했어요. 검토 결과는 여기에서 확인해요</span>
+      <button type="button" onclick="this.parentElement.hidden=true">닫기</button>
+    </div>
     <div class="card-list" id="card-list"></div>
     <div class="state-block" id="empty-state" hidden>
       <div class="state-icon" id="empty-icon">☆</div>
       <div class="state-title" id="empty-title">저장한 공간이 없습니다</div>
       <div class="state-sub" id="empty-sub">조건에 맞는 화장실을 찾아 저장하면 여기에서 다시 볼 수 있어요</div>
-      <a class="btn-secondary" href="../index.html">화장실 둘러보기</a>
+      <a class="btn-secondary" id="empty-link" href="../index.html">화장실 둘러보기</a>
     </div>
   </main>
 
@@ -119,7 +124,8 @@
   renderAccount();
 
   const params = new URLSearchParams(location.search);
-  let activeTab = params.get("tab") === "recent" ? "recent" : "favorites";
+  let activeTab = ["recent", "proposals"].includes(params.get("tab")) ? params.get("tab") : "favorites";
+  if (params.get("submitted") === "1") document.getElementById("submit-toast").hidden = false;
 
   document.querySelectorAll(".subtab").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -129,8 +135,45 @@
       render();
     });
   });
-  document.querySelector(`.subtab[data-tab="${activeTab}"]`).classList.add("active");
-  document.querySelector(`.subtab[data-tab="${activeTab === "favorites" ? "recent" : "favorites"}"]`).classList.remove("active");
+  document.querySelectorAll(".subtab").forEach((b) => b.classList.toggle("active", b.dataset.tab === activeTab));
+
+  /* ---------- 내 개선 제안 ---------- */
+  function renderProposals() {
+    const cardList = document.getElementById("card-list");
+    const emptyState = document.getElementById("empty-state");
+    const props = App.Proposals.list();
+    if (props.length === 0) {
+      cardList.innerHTML = "";
+      emptyState.hidden = false;
+      document.getElementById("empty-icon").textContent = "✎";
+      document.getElementById("empty-title").textContent = "제출한 개선 제안이 없습니다";
+      document.getElementById("empty-sub").textContent = "불편했던 점이나 실제와 다른 정보를 알려 주면 더 나은 화장실을 만드는 데 쓰여요";
+      const link = document.getElementById("empty-link");
+      link.href = "./propose.html"; link.textContent = "개선 제안하기";
+      return;
+    }
+    emptyState.hidden = true;
+    const esc = App.esc;
+    cardList.innerHTML = props.map((p) => `
+      <article class="prop-card">
+        <div class="prop-top">
+          <div style="min-width:0">
+            <span class="prop-kind">${App.Proposals.KIND[p.kind] || "제안"}${p.persona ? ` · ${esc(p.persona)}` : ""}${p.item ? ` · ${esc(p.item)}` : ""}</span>
+            <a class="prop-title" href="./detail.html?id=${encodeURIComponent(p.toiletId)}">${esc(p.title)}</a>
+          </div>
+          <span class="status-tag ${p.status}">${App.Proposals.STATUS[p.status] || p.status}</span>
+        </div>
+        <span class="prop-meta">${new Date(p.createdAt).toLocaleDateString("ko-KR")} 제출${p.hasPhoto ? " · 사진 첨부" : ""}${p.author ? ` · ${esc(p.author)}` : ""}</span>
+        <details><summary>제안 내용 보기</summary><p class="prop-body">${esc(p.body)}</p></details>
+        ${p.status === "pending" ? `<div class="prop-actions"><button class="text-btn" type="button" data-cancel="${p.id}">제안 취소</button></div>` : ""}
+      </article>`).join("");
+  }
+  document.getElementById("card-list").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-cancel]");
+    if (!b || !confirm("이 제안을 취소할까요? 취소한 제안은 되돌릴 수 없어요.")) return;
+    App.Proposals.remove(b.dataset.cancel);
+    render();
+  });
 
   let toilets = [];
   try {
@@ -150,6 +193,10 @@
     const emptyState = document.getElementById("empty-state");
     const favIds = App.getFavorites();
     document.getElementById("fav-count").textContent = favIds.length;
+    document.getElementById("prop-count").textContent = App.Proposals.list().length || "";
+    const emptyLink = document.getElementById("empty-link");
+    emptyLink.href = "../index.html"; emptyLink.textContent = "화장실 둘러보기";
+    if (activeTab === "proposals") return renderProposals();
 
     let items = [];
     if (activeTab === "favorites") {

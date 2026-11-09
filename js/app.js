@@ -55,7 +55,8 @@ const App = (() => {
   })();
 
   /* ---------- 데이터 로드 ----------
-     data/toilets_seoul_jung.json(서울 중구·종로구 200건)을 불러와 화면에서 쓰는 형태로 가공합니다.
+     J: data/toilets_seoul_jung.json(서울 중구·종로구 200건)을 불러와 화면에서 쓰는 형태로 가공합니다.
+     A: 서울시 API(지하철 역사 화장실)는 아래 normalizeApi()에서 같은 형태로 맞춥니다.
      ※ fetch()가 필요하므로 파일 더블클릭(file://)이 아니라 로컬 서버/GitHub Pages로 열어야 합니다. */
   function parseHours(raw) {
     const text = String(raw || "").trim();
@@ -83,7 +84,7 @@ const App = (() => {
       hasDiaperTable: !!r.hasDiaperTable,
       genderSeparated: (r.maleToilet || 0) + (r.maleUrinal || 0) > 0 && (r.femaleToilet || 0) > 0,
       ...parseHours(r.openHours),
-      status: "open",                            // 공공데이터 등재 = 개방. (카카오 검색 추가분은 'unknown')
+      status: "open",                            // 공공데이터 등재 = 개방. (서울시 API 항목은 'api')
       lat: null, lng: null, distanceM: null,
     };
   }
@@ -205,12 +206,8 @@ const App = (() => {
     if (!Array.isArray(data) || data.length === 0) throw new Error("empty");
     return data.map(normalize);
   }
-  /* 카드에 쓰는 '지역 · 도보 N분' 문구 (좌표를 아직 모르면 지역만 표시) */
-  function distLabel(t) {
-    return t.distanceM == null ? `${t.area || ""}` : `${t.area || ""} · 도보 ${Math.max(1, Math.round(t.distanceM / 70))}분`;
-  }
 
-  /* 출처 표시: J = 공공데이터 JSON, A = 카카오 API 검색 */
+  /* 출처 표시: J = 공공데이터 JSON, A = 서울시 API (지하철 역사 화장실) */
   function srcTag(t) {
     return t.source === "api"
       ? `<span class="src-tag src-a" title="서울시 API (지하철 역사 화장실)">A</span>`
@@ -330,6 +327,33 @@ const App = (() => {
     return { currentUser, signup, login, logout };
   })();
 
+  /* ---------- 개선 제안 (데모용: 브라우저 LocalStorage 기반) ----------
+     kind: "comfort"(불편 개선) | "info"(정보 수정)
+     status: "pending"(검토 대기) | "done"(반영 완료) | "rejected"(반려)
+     실제 서비스에서는 서버에 저장하고 담당자가 검토 상태를 바꿔야 합니다. */
+  const PROPOSAL_KEY = "pt_proposals";
+  const Proposals = (() => {
+    const STATUS = { pending: "검토 대기", done: "반영 완료", rejected: "반려" };
+    const KIND = { comfort: "불편 개선", info: "정보 수정" };
+    const list = () => { try { return JSON.parse(localStorage.getItem(PROPOSAL_KEY)) || []; } catch { return []; } };
+    const write = (all) => { try { localStorage.setItem(PROPOSAL_KEY, JSON.stringify(all)); return true; } catch { return false; } };
+    function add(p) {
+      const user = Auth.currentUser();
+      const item = {
+        id: "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        createdAt: Date.now(), status: "pending", author: user ? user.nickname : null, ...p,
+      };
+      const all = list();
+      all.unshift(item);
+      return write(all) ? item : null;
+    }
+    function remove(id) { write(list().filter((p) => p.id !== id)); }
+    return { list, add, remove, STATUS, KIND };
+  })();
+
+  /* HTML 이스케이프 (사용자 입력·데이터를 innerHTML에 넣을 때) */
+  const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
   /* ---------- 헤더/탭바 ---------- */
   function renderTabbar(mountEl, active) {
     if (!mountEl) return;
@@ -338,12 +362,16 @@ const App = (() => {
     const ICON_MAP = svg('<path d="M9 4 3 6.5V20l6-2.5 6 2.5 6-2.5V4l-6 2.5z"/><path d="M9 4v13.5M15 6.5V20"/>');
     const ICON_DASH = svg('<rect x="3" y="12" width="4" height="9" rx="1"/><rect x="10" y="3" width="4" height="18" rx="1"/><rect x="17" y="8" width="4" height="13" rx="1"/>');
     const ICON_MY = svg('<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/>');
+    const ICON_PROPOSE = svg('<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>');
     mountEl.innerHTML = `
       <a class="tab${active === "home" ? " active" : ""}" href="${HOME_URL}">
         ${ICON_MAP}지도
       </a>
       <a class="tab${active === "dashboard" ? " active" : ""}" href="${pageUrl("dashboard.html")}">
-        ${ICON_DASH}대시보드
+        ${ICON_DASH}개선 보드
+      </a>
+      <a class="tab${active === "propose" ? " active" : ""}" href="${pageUrl("propose.html")}">
+        ${ICON_PROPOSE}개선 제안
       </a>
       <a class="tab${active === "my" ? " active" : ""}" href="${pageUrl("mypage.html")}">
         ${ICON_MY}마이
@@ -393,7 +421,7 @@ const App = (() => {
     getRecent, addRecent, relativeTime,
     badgesOf, isOpenNow,
     renderTabbar, enableDragScroll,
-    Auth,
+    Auth, Proposals, esc,
     countBy, groupByArea,
   };
 })();

@@ -49,7 +49,11 @@
 
     <section class="report-row">
       <span>청소도구 적치·고장을 발견했나요?</span>
-      <button class="text-btn" type="button" onclick="alert('이번 버전에서는 제보 기능이 준비 중입니다')">제보</button>
+      <a class="text-btn" id="report-link" href="./propose.html?mode=info&amp;item=broken">제보</a>
+    </section>
+    <section class="report-row">
+      <span>이용하기 불편했거나 정보가 실제와 다른가요?</span>
+      <a class="text-btn" id="propose-link" href="./propose.html">개선 제안</a>
     </section>
   </main>
 
@@ -85,6 +89,10 @@
       <div class="spec"><span class="spec-label">운영시간</span><span class="spec-value">${t.openHours || "정보 없음"}</span></div>
     `;
     document.getElementById("v-address").textContent = t.address;
+    // 개선 제안 페이지로 이 화장실을 미리 선택한 채 이동
+    const pid = encodeURIComponent(t.id);
+    document.getElementById("report-link").href = `./propose.html?id=${pid}&mode=info&item=broken`;
+    document.getElementById("propose-link").href = `./propose.html?id=${pid}`;
     if (t.source === "api") {  // 서울시 API(지하철 역사) 전용 정보
       const row = (l, v) => (v ? `<div class="info-row"><span class="label">${l}</span><span>${v}</span></div>` : "");
       document.getElementById("info-extra").innerHTML =

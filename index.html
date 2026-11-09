@@ -111,7 +111,7 @@
     });
   });
 
-  /* ---------- 목록 + 핀 (공공데이터 JSON + 카카오 검색 추가분) ---------- */
+  /* ---------- 목록 + 핀 (J 공공데이터 JSON + A 서울시 지하철 API) ---------- */
   const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const allItems = () => allToilets;
 
@@ -345,7 +345,7 @@
         if (t && KakaoMap.focusOn(t, 3)) { focused = true; showPinCard(t); }
       };
       tryFocus();
-      // 좌표가 없는 JSON 항목을 주소로 변환 → 변환되는 대로 핀/거리 갱신 → 끝나면 주변 검색 시작
+      // 좌표가 없는 J 항목을 주소로 변환 → 변환되는 대로 핀/거리 갱신 (A 항목은 좌표가 이미 있음)
       KakaoMap.geocodeAll(allToilets, () => {
         App.GEO.applyDistances(allToilets);
         scheduleRender();

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>공공화장실 큐레이터 · 대시보드</title>
+<title>공공화장실 큐레이터 · 개선 보드</title>
 <link rel="stylesheet" href="../css/style.css">
 <style>
 /* ---- 유형 선택 캐러셀 ---- */
@@ -37,8 +37,6 @@
 .more-btn{display:block;width:100%;margin-top:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--primary-dark);border-radius:999px;padding:7px 0;font-size:12px;font-weight:700}
 .more-box > .bar-row,.more-box > .info-row{margin-top:10px}
 .more-box > .info-row{margin-top:0}
-.sec-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-l);padding:16px}
-.sec-card > .section-title{margin-bottom:10px}
 </style>
 </head>
 <body>
@@ -47,7 +45,7 @@
   <header class="app-header">
     <div class="brand-row">Restie</div>
     <div class="header-row">
-      <span class="header-title" style="font-size:16px">대시보드</span>
+      <span class="header-title" style="font-size:16px">개선 보드</span>
     </div>
   </header>
 
@@ -81,6 +79,41 @@
       </a>
     </div>
 
+    <!-- ===== 개선 보드: 지역별 빈칸 확인 ===== -->
+    <section id="board" hidden style="display:flex;flex-direction:column;gap:14px">
+      <div>
+        <div class="section-title">지역의 빈칸을 확인해요</div>
+        <p class="sec-sub" style="margin:2px 0 10px">핵심 시설 등록 상태와 개선 제안을 모아 먼저 개선할 곳을 찾아요.</p>
+        <div class="board-region">
+          <label class="sr-only" for="board-region">지역 선택</label>
+          <select id="board-region"></select>
+          <p class="board-info" id="board-info" aria-live="polite"></p>
+        </div>
+      </div>
+
+      <section class="sec-card">
+        <div class="section-title" id="board-summary-title">전체 데이터 요약</div>
+        <p class="sec-sub">공공데이터 등록 현황과 개선 제안</p>
+        <div class="metric-row">
+          <div class="metric"><strong id="m-rate">-</strong><span>핵심 항목<br>등록률</span></div>
+          <div class="metric"><strong id="m-pending">-</strong><span>검토 대기<br>제안</span></div>
+          <div class="metric"><strong id="m-gap" class="sm">-</strong><span>가장 부족한<br>항목</span></div>
+        </div>
+      </section>
+
+      <section class="sec-card">
+        <div class="section-title">먼저 개선할 분야</div>
+        <p class="sec-sub">등록되지 않은 항목은 실제로 없거나 아직 확인되지 않은 곳이에요</p>
+        <div class="issue-grid" id="board-issues"></div>
+      </section>
+
+      <section class="sec-card">
+        <div class="section-title">개선이 필요한 화장실</div>
+        <p class="sec-sub">핵심 항목이 적게 등록된 순서예요 (같으면 가까운 순)</p>
+        <div class="board-fac-list" id="board-facs"></div>
+      </section>
+    </section>
+
     <!-- ===== 사용자 선택 ===== -->
     <section id="tg-section" hidden>
       <div class="section-title">나에게 맞는 화장실 보기</div>
@@ -101,6 +134,24 @@
         <span id="region-name">지역 선택 안 됨</span>
         <span class="num" id="region-count">-</span>
       </a>
+    </section>
+
+    <!-- ===== 개선 제안 흐름 + 최근 제안 ===== -->
+    <section class="sec-card" id="flow-card" hidden>
+      <div class="section-title">제안이 반영되는 흐름</div>
+      <div class="step-list">
+        <div class="step"><span class="step-num">1</span><div><strong>이용자가 불편·정보 수정 제안</strong><p>화장실, 이용 상황, 확인한 날짜를 함께 기록해요</p></div></div>
+        <div class="step"><span class="step-num">2</span><div><strong>담당자가 근거 확인</strong><p>확인 전 정보는 '검토 대기'로 남겨 둬요</p></div></div>
+        <div class="step"><span class="step-num">3</span><div><strong>지역별 반복 불편 정리</strong><p>접근성·안내·운영 개선 과제로 이어져요</p></div></div>
+      </div>
+      <a class="btn-primary link" href="./propose.html">개선 제안 작성하기</a>
+    </section>
+
+    <section id="recent-props" hidden>
+      <div class="section-title" style="display:flex;justify-content:space-between;align-items:baseline">
+        최근 개선 제안 <a class="text-btn" href="./mypage.html?tab=proposals">전체 보기</a>
+      </div>
+      <div class="card-list" id="recent-prop-list" style="margin-top:10px"></div>
     </section>
 
     <div class="state-block" id="error-state" hidden>
@@ -320,6 +371,108 @@
     track.children[5].scrollIntoView({ inline: "center", block: "nearest" });
   }
 
+  /* ---------- 개선 보드: 지역별 핵심 항목 등록 현황 ---------- */
+  const esc = App.esc;
+  const BOARD_KEYS = [
+    { k: "stepfree", label: "장애인용 칸", has: (t) => t.hasStepFree },
+    { k: "diaper", label: "기저귀 교환대", has: (t) => t.hasDiaperTable },
+    { k: "bell", label: "비상벨", has: (t) => t.hasBell },
+    { k: "cctv", label: "CCTV", has: (t) => t.hasCctv },
+    { k: "hours", label: "운영시간", has: (t) => !!t.openTime },   // '정시' 등 시간이 정확하지 않으면 미등록
+  ];
+  const BOARD_ISSUES = [
+    { name: "접근성", desc: "장애인용 칸", keys: ["stepfree"] },
+    { name: "편의 시설", desc: "기저귀 교환대", keys: ["diaper"] },
+    { name: "안심 설비", desc: "비상벨·CCTV", keys: ["bell", "cctv"] },
+    { name: "운영 정보", desc: "정확한 운영시간", keys: ["hours"] },
+  ];
+  const keyHas = (k) => BOARD_KEYS.find((x) => x.k === k).has;
+  const gapsOf = (t) => BOARD_KEYS.filter((x) => !x.has(t));
+  const boardSel = document.getElementById("board-region");
+
+  function setupBoard() {
+    const counts = toilets.reduce((m, t) => ((m[t.area || "기타"] = (m[t.area || "기타"] || 0) + 1), m), {});
+    const prev = boardSel.value;
+    boardSel.innerHTML = `<option value="all">전체 지역 (${toilets.length})</option>` +
+      Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([a, n]) => `<option value="${esc(a)}">${esc(a)} (${n})</option>`).join("");
+    if (prev && [...boardSel.options].some((o) => o.value === prev)) boardSel.value = prev;
+    document.getElementById("board").hidden = false;
+    document.getElementById("flow-card").hidden = false;
+    renderBoard();
+  }
+  boardSel.addEventListener("change", renderBoard);
+
+  function renderBoard() {
+    const region = boardSel.value || "all";
+    const list = toilets.filter((t) => region === "all" || (t.area || "기타") === region);
+    const ids = new Set(list.map((t) => t.id));
+    const label = region === "all" ? "전체 지역" : region;
+    const N = list.length;
+    document.getElementById("board-info").innerHTML = `${esc(label)} 화장실 <b>${N}곳</b> 기준`;
+    document.getElementById("board-summary-title").textContent = `${label} 데이터 요약`;
+
+    // ① 핵심 항목 등록률 = 등록된 항목 수 / (화장실 수 × 항목 수)
+    const total = N * BOARD_KEYS.length;
+    const ok = list.reduce((n, t) => n + BOARD_KEYS.length - gapsOf(t).length, 0);
+    document.getElementById("m-rate").textContent = total ? pct(ok, total) + "%" : "-";
+    // ② 이 지역 화장실에 대한 검토 대기 제안 (이 브라우저에 저장된 제안 기준)
+    const props = App.Proposals.list();
+    document.getElementById("m-pending").textContent = props.filter((p) => p.status === "pending" && ids.has(p.toiletId)).length;
+    // ③ 가장 많이 빠진 항목
+    const gaps = BOARD_KEYS.map((x) => ({ ...x, n: count(list, (t) => !x.has(t)) })).sort((a, b) => b.n - a.n);
+    document.getElementById("m-gap").textContent = gaps[0] && gaps[0].n ? gaps[0].label : "없음";
+
+    // 먼저 개선할 분야: 해당 항목이 하나라도 빠진 화장실 수
+    const issues = BOARD_ISSUES.map((it) => ({ ...it, n: count(list, (t) => it.keys.some((k) => !keyHas(k)(t))) }));
+    const max = Math.max(0, ...issues.map((x) => x.n));
+    document.getElementById("board-issues").innerHTML = issues.map((it) => `
+      <div class="issue${it.n && it.n === max ? " top" : ""}">
+        <strong>${it.name}</strong><span>${it.desc}</span>
+        <span class="issue-count">${it.n}곳 미등록 / ${N}곳</span>
+        <div class="mini-bar" aria-hidden="true"><i style="width:${pct(it.n, N)}%"></i></div>
+      </div>`).join("");
+
+    // 개선이 필요한 화장실 (미등록 많은 순 → 가까운 순, 최대 5곳)
+    const ranked = list.map((t) => ({ t, gap: gapsOf(t) }))
+      .sort((a, b) => b.gap.length - a.gap.length || (a.t.distanceM ?? 1e9) - (b.t.distanceM ?? 1e9))
+      .slice(0, 5);
+    document.getElementById("board-facs").innerHTML = ranked.map(({ t, gap }) => {
+      const rate = pct(BOARD_KEYS.length - gap.length, BOARD_KEYS.length);
+      return `
+        <div class="board-fac">
+          <div class="card-body">
+            <a class="card-name" href="./detail.html?id=${encodeURIComponent(t.id)}">${esc(t.name)}${App.srcTag(t)}</a>
+            <small>${esc(App.distLabel(t))} · 등록률 ${rate}%</small>
+            <small>${gap.length ? "미등록: " + gap.map((x) => x.label).join(", ") : "핵심 항목 모두 등록"}</small>
+            <div class="mini-bar" aria-hidden="true"><i style="width:${rate}%"></i></div>
+          </div>
+          <div class="board-fac-side">
+            <span class="gap-pill${gap.length ? "" : " ok"}">${gap.length ? `미등록 ${gap.length}` : "모두 등록"}</span>
+            <a href="./propose.html?id=${encodeURIComponent(t.id)}">제안하기 ›</a>
+          </div>
+        </div>`;
+    }).join("") || `<p class="state-sub" style="text-align:left">이 지역에 등록된 화장실이 없어요</p>`;
+
+    renderRecentProps(props);
+  }
+
+  /* 최근 개선 제안 (최대 3건) */
+  function renderRecentProps(props) {
+    const box = document.getElementById("recent-props");
+    box.hidden = props.length === 0;
+    document.getElementById("recent-prop-list").innerHTML = props.slice(0, 3).map((p) => `
+      <div class="prop-card">
+        <div class="prop-top">
+          <div style="min-width:0">
+            <span class="prop-kind">${App.Proposals.KIND[p.kind] || "제안"} · ${esc(p.area || "")}</span>
+            <a class="prop-title" href="./detail.html?id=${encodeURIComponent(p.toiletId)}">${esc(p.title)}</a>
+          </div>
+          <span class="status-tag ${p.status}">${App.Proposals.STATUS[p.status] || p.status}</span>
+        </div>
+        <span class="prop-meta">${new Date(p.createdAt).toLocaleDateString("ko-KR")} 제출</span>
+      </div>`).join("");
+  }
+
   /* ---------- 전체 현황 ---------- */
   async function init() {
     try {
@@ -341,6 +494,7 @@
       document.getElementById("region-count").textContent = regionCount + "곳";
       document.getElementById("region-summary").href = `./list.html?q=${encodeURIComponent(firstArea)}`;
 
+      setupBoard();
       setupTargets();
     } catch (err) {
       document.getElementById("error-state").hidden = false;
