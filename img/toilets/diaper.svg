@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" role="img" aria-label="벽에 설치된 접이식 기저귀 교환대">
+  <rect width="640" height="480" fill="#F4F9FC"/>
+  <g stroke="#DCEBF5" stroke-width="2"><path d="M0 90 H640 M0 180 H640 M0 270 H640 M0 360 H640 M128 0 V390 M256 0 V390 M384 0 V390 M512 0 V390"/></g>
+  <!-- 교환대 벽면 본체 -->
+  <rect x="190" y="110" width="260" height="70" rx="12" fill="#5FA9D6"/>
+  <!-- 펼쳐진 상판 -->
+  <path d="M175 180 H465 L500 255 H140Z" fill="#9FCFEA"/>
+  <path d="M140 255 H500 V275 Q500 285 490 285 H150 Q140 285 140 275Z" fill="#7FB3D1"/>
+  <!-- 매트 -->
+  <path d="M205 195 H435 L458 245 H182Z" fill="#E8F5FC"/>
+  <path d="M235 205 H405 L420 236 H220Z" fill="#D6ECF8"/>
+  <!-- 안전벨트 -->
+  <rect x="300" y="190" width="40" height="60" rx="6" fill="#FFFFFF" opacity=".8"/>
+  <!-- 받침 -->
+  <path d="M175 285 L200 330 H215 L195 285Z M465 285 L440 330 H425 L445 285Z" fill="#6FA6C6"/>
+  <!-- 안내 표지 -->
+  <rect x="470" y="110" width="120" height="46" rx="8" fill="#FFFFFF" stroke="#7CC8EE" stroke-width="2"/>
+  <text x="530" y="139" font-family="Pretendard, sans-serif" font-size="15" font-weight="700" fill="#2F5873" text-anchor="middle">기저귀 교환대</text>
+  <!-- 휴지통 -->
+  <rect x="80" y="310" width="56" height="70" rx="8" fill="#BFE2F4"/><rect x="74" y="302" width="68" height="12" rx="6" fill="#9FCFEA"/>
+  <rect y="390" width="640" height="90" fill="#DCEBF5"/>
+</svg>

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" role="img" aria-label="손잡이가 설치된 넓은 장애인용 화장실 칸">
+  <rect width="640" height="480" fill="#F4F9FC"/>
+  <g stroke="#DCEBF5" stroke-width="2"><path d="M0 80 H640 M0 160 H640 M0 240 H640 M0 320 H640 M107 0 V360 M213 0 V360 M320 0 V360 M427 0 V360 M533 0 V360"/></g>
+  <!-- 변기 -->
+  <rect x="268" y="200" width="104" height="70" rx="10" fill="#FFFFFF" stroke="#A9D4EC" stroke-width="3"/>
+  <path d="M260 270 H380 Q380 330 340 345 H300 Q260 330 260 270Z" fill="#FFFFFF" stroke="#A9D4EC" stroke-width="3"/>
+  <rect x="290" y="345" width="60" height="30" fill="#FFFFFF" stroke="#A9D4EC" stroke-width="3"/>
+  <!-- 손잡이 (L자 + 접이식) -->
+  <g fill="none" stroke="#5FA9D6" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M140 160 V280 H230"/>
+    <path d="M420 250 H520"/>
+    <path d="M520 250 V220"/>
+  </g>
+  <g fill="#3E6F8E"><circle cx="140" cy="160" r="8"/><circle cx="230" cy="280" r="8"/><circle cx="520" cy="220" r="8"/></g>
+  <!-- 비상벨 -->
+  <rect x="455" y="140" width="46" height="46" rx="8" fill="#FFFFFF" stroke="#E9827A" stroke-width="3"/>
+  <circle cx="478" cy="163" r="12" fill="#E9827A"/>
+  <text x="478" y="208" font-family="Pretendard, sans-serif" font-size="13" font-weight="700" fill="#B3463C" text-anchor="middle">비상벨</text>
+  <!-- 세면대 -->
+  <rect x="40" y="300" width="80" height="16" rx="6" fill="#FFFFFF" stroke="#A9D4EC" stroke-width="3"/>
+  <!-- 바닥 (넓은 회전공간 표시) -->
+  <rect y="375" width="640" height="105" fill="#DCEBF5"/>
+  <ellipse cx="320" cy="430" rx="190" ry="34" fill="none" stroke="#7CC8EE" stroke-width="3" stroke-dasharray="10 8"/>
+</svg>

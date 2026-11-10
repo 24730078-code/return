@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" role="img" aria-label="화장실 칸 문이 늘어선 실내">
+  <rect width="640" height="480" fill="#F4F9FC"/>
+  <rect y="40" width="640" height="12" fill="#E3F1FA"/>
+  <!-- 칸막이 문 4개 -->
+  <g>
+    <rect x="40" y="90" width="130" height="290" rx="4" fill="#9FCFEA"/>
+    <rect x="180" y="90" width="130" height="290" rx="4" fill="#9FCFEA"/>
+    <rect x="320" y="90" width="130" height="290" rx="4" fill="#9FCFEA"/>
+    <rect x="460" y="90" width="130" height="290" rx="4" fill="#9FCFEA"/>
+  </g>
+  <g fill="#B8DCF0"><rect x="52" y="104" width="106" height="262" rx="3"/><rect x="192" y="104" width="106" height="262" rx="3"/><rect x="332" y="104" width="106" height="262" rx="3"/><rect x="472" y="104" width="106" height="262" rx="3"/></g>
+  <!-- 칸막이 기둥 -->
+  <g fill="#7FB3D1"><rect x="170" y="80" width="10" height="320"/><rect x="310" y="80" width="10" height="320"/><rect x="450" y="80" width="10" height="320"/><rect x="30" y="80" width="10" height="320"/><rect x="590" y="80" width="10" height="320"/></g>
+  <rect x="30" y="76" width="570" height="10" fill="#6FA6C6"/>
+  <!-- 손잡이·사용표시 -->
+  <g fill="#3E6F8E"><rect x="138" y="225" width="8" height="34" rx="4"/><rect x="278" y="225" width="8" height="34" rx="4"/><rect x="418" y="225" width="8" height="34" rx="4"/><rect x="558" y="225" width="8" height="34" rx="4"/></g>
+  <g><circle cx="142" cy="205" r="7" fill="#7FD1A8"/><circle cx="282" cy="205" r="7" fill="#F08F86"/><circle cx="422" cy="205" r="7" fill="#7FD1A8"/><circle cx="562" cy="205" r="7" fill="#7FD1A8"/></g>
+  <!-- 번호 -->
+  <g font-family="Pretendard, sans-serif" font-size="20" font-weight="700" fill="#2F5873" text-anchor="middle">
+    <text x="105" y="140">1</text><text x="245" y="140">2</text><text x="385" y="140">3</text><text x="525" y="140">4</text>
+  </g>
+  <!-- 바닥 -->
+  <rect y="380" width="640" height="100" fill="#DCEBF5"/>
+  <g fill="#CDE2EF"><rect x="40" y="380" width="130" height="20"/><rect x="180" y="380" width="130" height="20"/><rect x="320" y="380" width="130" height="20"/><rect x="460" y="380" width="130" height="20"/></g>
+</svg>

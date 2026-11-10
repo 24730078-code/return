@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" role="img" aria-label="지하상가 통로의 화장실 안내">
+  <rect width="640" height="480" fill="#EEF6FB"/>
+  <path d="M0 0 H640 V60 H0Z" fill="#DDEAF3"/>
+  <g fill="#FFFFFF"><rect x="40" y="24" width="90" height="10" rx="5"/><rect x="200" y="24" width="90" height="10" rx="5"/><rect x="360" y="24" width="90" height="10" rx="5"/><rect x="520" y="24" width="90" height="10" rx="5"/></g>
+  <!-- 가게 진열창 -->
+  <g>
+    <rect x="0" y="80" width="190" height="250" fill="#F7FBFE" stroke="#B9DDF0" stroke-width="3"/>
+    <rect x="20" y="130" width="150" height="150" fill="#D6ECF8"/>
+    <rect x="20" y="95" width="150" height="24" rx="4" fill="#9FCFEA"/>
+    <rect x="450" y="80" width="190" height="250" fill="#F7FBFE" stroke="#B9DDF0" stroke-width="3"/>
+    <rect x="470" y="130" width="150" height="150" fill="#D6ECF8"/>
+    <rect x="470" y="95" width="150" height="24" rx="4" fill="#9FCFEA"/>
+  </g>
+  <g fill="#BFE2F4"><rect x="40" y="200" width="40" height="70" rx="4"/><rect x="95" y="180" width="50" height="90" rx="4"/><rect x="490" y="190" width="50" height="80" rx="4"/><rect x="555" y="210" width="40" height="60" rx="4"/></g>
+  <!-- 가운데 통로 끝 화장실 입구 -->
+  <rect x="190" y="110" width="260" height="220" fill="#F2F8FC"/>
+  <rect x="260" y="170" width="120" height="160" rx="4" fill="#3E6F8E"/>
+  <rect x="270" y="180" width="100" height="150" fill="#2F5873"/>
+  <!-- 걸이식 안내판 -->
+  <rect x="318" y="60" width="4" height="30" fill="#6FA6C6"/>
+  <rect x="235" y="88" width="170" height="40" rx="8" fill="#2F5873"/>
+  <text x="305" y="115" font-family="Pretendard, sans-serif" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle">화장실</text>
+  <path d="M370 100 l14 8 -14 8z" fill="#7CC8EE"/>
+  <!-- 바닥 -->
+  <path d="M0 330 H640 V480 H0Z" fill="#E1EEF6"/>
+  <g stroke="#CFE2EE" stroke-width="2"><path d="M0 380 H640 M0 430 H640 M320 330 V480 M160 330 L100 480 M480 330 L540 480"/></g>
+</svg>

@@ -1,0 +1,50 @@
+{
+  "about": "화장실 이미지 샘플 데이터 (시연용). 사람이 나오지 않는 직접 그린 일러스트입니다. 화장실 이름·출처로 장소 유형을 정하고, 그 유형의 이미지를 순서대로 보여 줍니다. 장애인용 칸·기저귀 교환대가 있으면 해당 이미지를 덧붙입니다.",
+  "images": {
+    "park":       { "src": "img/toilets/park.svg",       "alt": "공원 공중화장실 외관" },
+    "subway":     { "src": "img/toilets/subway.svg",     "alt": "지하철역 화장실 입구 통로" },
+    "mall":       { "src": "img/toilets/mall.svg",       "alt": "지하상가 통로의 화장실 안내" },
+    "building":   { "src": "img/toilets/building.svg",   "alt": "공공기관 건물 안 화장실 입구" },
+    "sinks":      { "src": "img/toilets/sinks.svg",      "alt": "화장실 세면대" },
+    "stalls":     { "src": "img/toilets/stalls.svg",     "alt": "화장실 칸 문이 늘어선 실내" },
+    "accessible": { "src": "img/toilets/accessible.svg", "alt": "손잡이가 설치된 넓은 장애인용 화장실 칸" },
+    "diaper":     { "src": "img/toilets/diaper.svg",     "alt": "벽에 설치된 접이식 기저귀 교환대" }
+  },
+  "placeTypes": [
+    {
+      "type": "subway",
+      "label": "지하철역",
+      "match": { "source": "api", "nameRegex": "역\\s*\\(|역\\(|DDP역" },
+      "images": ["subway", "stalls", "sinks"]
+    },
+    {
+      "type": "mall",
+      "label": "지하상가·상가",
+      "match": { "nameRegex": "상가" },
+      "images": ["mall", "stalls", "sinks"]
+    },
+    {
+      "type": "park",
+      "label": "공원·야외",
+      "match": { "nameRegex": "공원|광장|놀이터|녹지|마을마당|터널|산방|체육회|남산골|배드민턴|계곡|안내소|쉼터|석호정|호현당|동산|팔각정|인왕산|공중화장실" },
+      "images": ["park", "sinks", "stalls"]
+    },
+    {
+      "type": "building",
+      "label": "공공기관·시설",
+      "match": { "nameRegex": "주민센터|파출소|지구대|구청|경찰|소방|119|세무|우체국|학교|도서관|복지관|센터|보건소|의회|문화원|의료원|공사|공단|대학교|체육관|미술관|사업소|시청|청사|주차장|빌딩" },
+      "images": ["building", "sinks", "stalls"]
+    },
+    {
+      "type": "etc",
+      "label": "기타",
+      "match": {},
+      "images": ["sinks", "stalls"]
+    }
+  ],
+  "facilityImages": [
+    { "key": "hasStepFree", "image": "accessible" },
+    { "key": "hasDiaperTable", "image": "diaper" }
+  ],
+  "maxImages": 4
+}

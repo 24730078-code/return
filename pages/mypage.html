@@ -3,254 +3,424 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>공공화장실 큐레이터 · 마이</title>
+<title>공공화장실 큐레이터 · 마이페이지</title>
 <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
-<div class="app">
+<div class="app propose-app my-app">
 
-  <header class="app-header">
-    <div class="brand-row">Restie</div>
-    <div class="header-row">
-      <span class="header-title" style="font-size:16px">마이</span>
-    </div>
-    <div class="subtab-row">
-      <button class="subtab active" type="button" data-tab="favorites">즐겨찾기 <span id="fav-count"></span></button>
-      <button class="subtab" type="button" data-tab="recent">최근 본 공간</button>
-      <button class="subtab" type="button" data-tab="proposals">내 제안 <span id="prop-count"></span></button>
-    </div>
+  <header class="app-header pp-header">
+    <div class="pp-brand">Restie</div>
   </header>
 
   <main class="content" id="content">
-    <section class="account" id="account" aria-label="계정"></section>
-    <div class="toast" id="submit-toast" hidden>
-      <span>제안을 제출했어요. 검토 결과는 여기에서 확인해요</span>
-      <button type="button" onclick="this.parentElement.hidden=true">닫기</button>
+    <!-- 로그아웃 상태: 로그인 · 회원가입 -->
+    <section id="account" aria-label="계정"></section>
+
+    <!-- 로그인 상태: 프로필 · 내 제안 · 설정 -->
+    <div id="my-body" hidden style="display:flex;flex-direction:column;gap:16px">
+
+      <!-- 프로필 + 제안 현황 -->
+      <section class="my-profile" aria-label="프로필">
+        <div class="my-profile-top">
+          <span class="my-avatar" id="my-avatar" aria-hidden="true"></span>
+          <div>
+            <strong id="my-name"></strong>
+            <p id="my-email"></p>
+          </div>
+          <button class="my-logout" type="button" id="logout-btn">로그아웃</button>
+        </div>
+        <div class="my-stats" role="group" aria-label="내 제안 현황">
+          <button type="button" data-show="all"><strong id="stat-all">0</strong><span>제출한 제안</span></button>
+          <button type="button" data-show="pending"><strong id="stat-pending">0</strong><span>검토 대기</span></button>
+          <button type="button" data-show="done"><strong id="stat-done">0</strong><span>검토 완료</span></button>
+        </div>
+      </section>
+
+      <!-- 내 개선 제안 -->
+      <section class="sec-card" id="proposal-panel" aria-labelledby="saved-title">
+        <div class="review-head">
+          <div>
+            <h2 class="section-title" id="saved-title">내 개선 제안</h2>
+            <p class="sec-sub" id="saved-sub" style="margin:2px 0 0">작성한 제안과 정보 확인 요청</p>
+          </div>
+          <span class="review-count" id="review-count">0건</span>
+        </div>
+        <p class="admin-notice" id="admin-notice" hidden>관리자 모드에서는 제안별로 검토 결과를 정할 수 있어요. 실서비스에서는 관리자 로그인 후에만 보이도록 설계해야 해요.</p>
+        <div class="review-filters" role="group" aria-label="검토 상태로 보기">
+          <button type="button" class="review-filter active" data-filter="all">전체 <span id="cnt-all">0</span></button>
+          <button type="button" class="review-filter" data-filter="pending">검토 대기 <span id="cnt-pending">0</span></button>
+          <button type="button" class="review-filter" data-filter="done">검토 완료 <span id="cnt-done">0</span></button>
+          <button type="button" class="review-filter" data-filter="rejected">반려 <span id="cnt-rejected">0</span></button>
+        </div>
+        <div id="saved-proposals"></div>
+      </section>
+
+      <!-- 설정 -->
+      <section class="sec-card my-menu" aria-labelledby="set-title">
+        <h2 id="set-title">설정</h2>
+        <div class="my-row my-row-col">
+          <div><strong>내 이용 상황</strong><span>개선 제안 2단계에서 ‘내 설정’으로 표시돼요.</span></div>
+          <div id="persona-chips" class="pf-chips" role="radiogroup" aria-label="내 이용 상황"></div>
+        </div>
+        <label class="my-row">
+          <div><strong>검토 결과 알림</strong><span>제안이 검토되면 알려드려요.</span></div>
+          <span class="switch"><input type="checkbox" id="notify-toggle"><span class="switch-track" aria-hidden="true"></span></span>
+        </label>
+        <label class="my-row">
+          <div><strong>관리자 모드 <em class="my-badge">데모</em></strong><span>내 제안 목록에서 검토 결과를 정할 수 있어요.</span></div>
+          <span class="switch"><input type="checkbox" id="admin-toggle"><span class="switch-track" aria-hidden="true"></span></span>
+        </label>
+      </section>
     </div>
-    <div class="card-list" id="card-list"></div>
-    <div class="state-block" id="empty-state" hidden>
-      <div class="state-icon" id="empty-icon">☆</div>
-      <div class="state-title" id="empty-title">저장한 공간이 없습니다</div>
-      <div class="state-sub" id="empty-sub">조건에 맞는 화장실을 찾아 저장하면 여기에서 다시 볼 수 있어요</div>
-      <a class="btn-secondary" id="empty-link" href="../index.html">화장실 둘러보기</a>
-    </div>
+
+    <!-- 즐겨찾기한 화장실 (로그인 없이도 이 기기에 저장됨) -->
+    <section class="sec-card" aria-labelledby="fav-title">
+      <div class="review-head">
+        <h2 class="section-title" id="fav-title">즐겨찾기한 화장실</h2>
+        <span class="review-count" id="fav-count">0곳</span>
+      </div>
+      <div class="my-fav-list" id="fav-list"></div>
+      <button type="button" class="my-more" id="fav-more" hidden></button>
+    </section>
+
+    <!-- 최근 본 화장실 -->
+    <section class="sec-card" aria-labelledby="recent-title">
+      <h2 class="section-title" id="recent-title">최근 본 화장실</h2>
+      <div class="my-recent-row" id="recent-list"></div>
+    </section>
+
+    <!-- 로그인하면 할 수 있는 것 (로그아웃 상태에서만) -->
+    <section class="sec-card" id="guest-benefits" aria-labelledby="benefit-title" hidden>
+      <h2 class="section-title" id="benefit-title">로그인하면 할 수 있어요</h2>
+      <ul class="my-benefits">
+        <li><strong>내 제안 현황 보기</strong><span>제출한 개선 제안과 정보 수정 요청을 한곳에서 확인해요.</span></li>
+        <li><strong>검토 결과 알림 받기</strong><span>담당자가 제안을 검토하면 바로 알려드려요.</span></li>
+        <li><strong>내 이용 상황 저장</strong><span>제안할 때 내 상황이 미리 표시돼요.</span></li>
+      </ul>
+    </section>
+
+    <!-- 도움말 (누구나) -->
+    <section class="sec-card my-menu" aria-labelledby="help-title">
+      <h2 id="help-title">도움말</h2>
+      <button type="button" class="my-row my-link" data-info="guide"><div><strong>개선 제안 가이드</strong><span>좋은 제안을 쓰는 방법과 처리 절차</span></div><span class="my-chev" aria-hidden="true">›</span></button>
+      <button type="button" class="my-row my-link" data-info="privacy"><div><strong>개인정보·사진 안내</strong><span>제안에 올리면 안 되는 정보</span></div><span class="my-chev" aria-hidden="true">›</span></button>
+      <button type="button" class="my-row my-link danger" id="reset-btn" hidden><div><strong>내 기록 초기화</strong><span>이 기기에 저장된 제안을 모두 지워요</span></div><span class="my-chev" aria-hidden="true">›</span></button>
+    </section>
+
+    <p class="my-foot">Restie 프로토타입 · 데이터는 이 브라우저에만 저장돼요</p>
   </main>
 
   <nav class="app-tabbar" id="tabbar-root" aria-label="주요 메뉴"></nav>
 </div>
+
+<!-- 도움말 시트 -->
+<div class="my-sheet-backdrop" id="info-backdrop">
+  <div class="my-sheet" role="dialog" aria-modal="true" aria-labelledby="info-title">
+    <div class="grab" aria-hidden="true"></div>
+    <div class="my-sheet-head">
+      <h2 id="info-title"></h2>
+      <button type="button" class="my-sheet-close" id="info-close" aria-label="닫기">✕</button>
+    </div>
+    <div id="info-body"></div>
+  </div>
+</div>
+<div class="snack" id="snack" role="status" aria-live="polite"></div>
 
 <script src="../js/app.js"></script>
 <script>
 (async function () {
   App.renderTabbar(document.getElementById("tabbar-root"), "my");
 
-  /* ---------- 계정: 로그인 / 회원가입 ---------- */
-  const accountEl = document.getElementById("account");
-  let authMode = null; // null | "login" | "signup"
+  const $ = (id) => document.getElementById(id);
+  const esc = App.esc;
 
-  function renderAccount() {
-    const user = App.Auth.currentUser();
-    if (user) {
-      accountEl.innerHTML = `
-        <div class="account-card">
-          <div class="avatar" id="acc-avatar" aria-hidden="true"></div>
-          <div class="account-info">
-            <span class="account-name" id="acc-name"></span>
-            <span class="account-sub" id="acc-email"></span>
-          </div>
-          <button class="btn-secondary" type="button" data-auth="logout">로그아웃</button>
-        </div>`;
-      document.getElementById("acc-avatar").textContent = user.nickname.slice(0, 1);
-      document.getElementById("acc-name").textContent = user.nickname + "님";
-      document.getElementById("acc-email").textContent = user.email;
-      return;
-    }
-    if (!authMode) {
-      accountEl.innerHTML = `
-        <div class="account-card guest">
-          <div class="account-info">
-            <span class="account-name">로그인이 필요해요</span>
-            <span class="account-sub">로그인하고 내 계정으로 Restie를 이용해 보세요</span>
-          </div>
-          <div class="account-actions">
-            <button class="btn-secondary" type="button" data-auth="login">로그인</button>
-            <button class="btn-secondary primary" type="button" data-auth="signup">회원가입</button>
-          </div>
-        </div>`;
-      return;
-    }
-    const signup = authMode === "signup";
-    accountEl.innerHTML = `
-      <form class="auth-card" id="auth-form" novalidate>
-        <div class="auth-tabs" role="tablist">
-          <button class="auth-tab${signup ? "" : " active"}" type="button" role="tab" aria-selected="${!signup}" data-auth="login">로그인</button>
-          <button class="auth-tab${signup ? " active" : ""}" type="button" role="tab" aria-selected="${signup}" data-auth="signup">회원가입</button>
-        </div>
-        ${signup ? `<label class="field"><span>닉네임 (2~12자)</span><input name="nickname" maxlength="12" autocomplete="nickname"></label>` : ""}
-        <label class="field"><span>이메일</span><input name="email" type="email" autocomplete="email" inputmode="email"></label>
-        <label class="field"><span>비밀번호${signup ? " (8자 이상)" : ""}</span><input name="password" type="password" autocomplete="${signup ? "new-password" : "current-password"}"></label>
-        ${signup ? `<label class="field"><span>비밀번호 확인</span><input name="confirm" type="password" autocomplete="new-password"></label>` : ""}
-        <p class="form-error" id="auth-error" role="alert" hidden></p>
-        <button class="btn-primary" type="submit">${signup ? "가입하기" : "로그인"}</button>
-        <button class="text-btn" type="button" data-auth="close">닫기</button>
-      </form>`;
-    accountEl.querySelector("input").focus();
+  /* ---------- 저장 키 (이 기기 LocalStorage) ---------- */
+  const K_PERSONA = "pt_my_persona", K_NOTIFY = "pt_my_notify", K_ADMIN = "pt_admin_mode";
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+    set(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} },
+  };
+
+  /* 이용 상황: 개선 제안(propose.html)의 목록과 같은 키·이름 */
+  const PERSONAS = {
+    wheel:  { name: "휠체어·보행보조" },
+    infant: { name: "영유아 동반 보호자" },
+    safe:   { name: "야간 귀가자·여성" },
+    senior: { name: "임산부·노약자" },
+    urgent: { name: "급한 이용 수요" },
+    etc:    { name: "기타 이용자" },
+  };
+  const REVIEW_LABEL = { pending: "검토 대기", done: "검토 완료", rejected: "반려" };
+  const KIND_LABEL = { comfort: "개선 제안", info: "화장실 정보 개선" };
+
+  let reviewFilter = "all";
+  let adminMode = store.get(K_ADMIN) === "1";
+  let myPersona = PERSONAS[store.get(K_PERSONA)] ? store.get(K_PERSONA) : null;
+  let notifyOn = store.get(K_NOTIFY) === "1";
+
+  /* ---------- 스낵바 ---------- */
+  let snackTimer = null;
+  function snack(msg) {
+    const el = $("snack");
+    el.textContent = msg;
+    el.classList.add("show");
+    clearTimeout(snackTimer);
+    snackTimer = setTimeout(() => el.classList.remove("show"), 2200);
   }
 
-  accountEl.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-auth]");
-    if (!btn) return;
-    const act = btn.dataset.auth;
-    if (act === "logout") { App.Auth.logout(); authMode = null; }
-    else if (act === "close") authMode = null;
-    else authMode = act;
-    renderAccount();
+  /* ---------- 계정 (로그아웃 상태: 안내 문구 + 로그인 · 회원가입 버튼 → 별도 페이지로 이동) ---------- */
+  const accountEl = $("account");
+  function renderAccount() {
+    const user = App.Auth.currentUser();
+    $("my-body").hidden = !user;
+    $("guest-benefits").hidden = !!user;
+    $("reset-btn").hidden = !user;
+    if (user) { accountEl.innerHTML = ""; accountEl.hidden = true; renderMy(); return; }
+    accountEl.hidden = false;
+    accountEl.innerHTML = `
+      <div class="my-guest">
+        <strong class="my-guest-title">로그인하고 내 제안을 확인해 보세요</strong>
+        <p class="my-guest-sub">개선 제안 현황과 검토 결과를 한곳에서 볼 수 있어요.</p>
+        <div class="auth-btns">
+          <a class="auth-btn primary" href="./login.html">로그인</a>
+          <a class="auth-btn" href="./signup.html">회원가입</a>
+        </div>
+      </div>`;
+  }
+  $("logout-btn").addEventListener("click", () => { App.Auth.logout(); renderAccount(); });
+
+  /* ---------- 즐겨찾기 · 최근 본 화장실 (로그인과 상관없이 이 기기에 저장된 것) ---------- */
+  let toiletMap = new Map();
+  const FAV_SHOW = 3;
+  let favOpen = false;
+  function renderFavorites() {
+    const favs = App.getFavorites().map((id) => toiletMap.get(id)).filter(Boolean);
+    $("fav-count").textContent = `${favs.length}곳`;
+    const list = favOpen ? favs : favs.slice(0, FAV_SHOW);
+    $("fav-list").innerHTML = favs.length
+      ? list.map((t) => `
+          <div class="my-fav">
+            <a href="./detail.html?id=${encodeURIComponent(t.id)}">
+              <span class="card-name">${esc(t.name)}${App.srcTag(t)}</span>
+              <span class="card-dist">${esc(App.distLabel(t))}</span>
+            </a>
+            <button class="fav-toggle active" type="button" data-unfav="${t.id}" aria-label="즐겨찾기에서 제거">★</button>
+          </div>`).join("")
+      : `<p class="my-empty">아직 즐겨찾기한 화장실이 없어요. 지도나 화장실 정보에서 ☆를 눌러 저장해 보세요.</p>`;
+    const more = $("fav-more");
+    more.hidden = favs.length <= FAV_SHOW;
+    more.textContent = favOpen ? "접기" : `전체 보기 (${favs.length}곳)`;
+  }
+  $("fav-list").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-unfav]");
+    if (!b) return;
+    App.toggleFavorite(b.dataset.unfav);
+    renderFavorites();
+    snack("즐겨찾기에서 제거했어요");
+  });
+  $("fav-more").addEventListener("click", () => { favOpen = !favOpen; renderFavorites(); });
+
+  function renderRecent() {
+    const items = App.getRecent().map((r) => ({ r, t: toiletMap.get(r.id) })).filter((x) => x.t).slice(0, 5);   // 최근 5곳
+    $("recent-list").innerHTML = items.length
+      ? items.map(({ r, t }) => `
+          <a class="my-recent" href="./detail.html?id=${encodeURIComponent(t.id)}">
+            <span class="name">${esc(t.name)}</span>
+            <span class="when">${esc(App.relativeTime(r.viewedAt))}</span>
+          </a>`).join("")
+      : `<p class="my-empty">최근 본 화장실이 없어요.</p>`;
+  }
+
+  /* ---------- 제안 목록 ---------- */
+  const fmtDate = (ts) => new Date(ts).toLocaleDateString("ko-KR");
+
+  function renderProposals() {
+    const rows = App.Proposals.list();
+    const count = (st) => rows.filter((r) => st === "all" || r.status === st).length;
+
+    ["all", "pending", "done", "rejected"].forEach((st) => { $("cnt-" + st).textContent = count(st); });
+    $("stat-all").textContent = count("all");
+    $("stat-pending").textContent = count("pending");
+    $("stat-done").textContent = count("done");
+    $("review-count").textContent = `${rows.length}건`;
+    $("saved-title").textContent = adminMode ? "제안 검토 관리" : "내 개선 제안";
+    $("saved-sub").textContent = adminMode ? "제안별로 검토 결과를 선택해요" : "작성한 제안과 정보 확인 요청";
+    $("admin-notice").hidden = !adminMode;
+    $("admin-toggle").checked = adminMode;
+    document.querySelectorAll(".review-filter").forEach((b) => b.classList.toggle("active", b.dataset.filter === reviewFilter));
+
+    const box = $("saved-proposals");
+    const list = rows.filter((r) => reviewFilter === "all" || r.status === reviewFilter);
+    if (!rows.length) {
+      box.innerHTML = `<div class="review-empty">아직 저장된 제안이 없어요.<br><a href="./propose.html">개선 제안 화면</a>에서 첫 제안을 남겨 보세요.</div>`;
+      return;
+    }
+    if (!list.length) {
+      box.innerHTML = `<div class="review-empty">${REVIEW_LABEL[reviewFilter]} 상태인 제안이 없어요.</div>`;
+      return;
+    }
+    box.innerHTML = list.map((p) => {
+      const status = REVIEW_LABEL[p.status] ? p.status : "pending";
+      const meta = `${fmtDate(p.createdAt)} 제출${p.reviewedAt ? ` · ${esc(p.reviewedAt)} ${REVIEW_LABEL[status]}` : ""}`;
+      const change = p.kind === "info" && p.actual
+        ? `<p class="review-change">${p.current ? `${esc(p.current)} → ` : ""}<b>${esc(p.actual)}</b>${p.checkedDate ? ` · ${esc(p.checkedDate)} 확인` : ""}</p>` : "";
+      const memo = p.memo ? `<p class="review-memo"><strong>운영자 메모</strong> ${esc(p.memo)}</p>` : "";
+      let actions = "";
+      if (adminMode) {
+        actions = status === "pending"
+          ? `<div class="review-actions">
+               <input id="memo-${p.id}" type="text" maxlength="80" placeholder="검토 메모 (선택, 이용자에게 보여요)" aria-label="검토 메모">
+               <div class="review-actions-row">
+                 <button type="button" class="review-btn done" data-review="${p.id}" data-to="done">검토 완료</button>
+                 <button type="button" class="review-btn reject" data-review="${p.id}" data-to="rejected">반려</button>
+               </div></div>`
+          : `<div class="review-actions"><div class="review-actions-row">
+               <button type="button" class="review-btn reset" data-review="${p.id}" data-to="pending">검토 대기로 되돌리기</button>
+             </div></div>`;
+      } else if (status === "pending") {
+        actions = `<div class="prop-actions" style="margin-top:8px"><button class="text-btn" type="button" data-cancel="${p.id}">제안 취소</button></div>`;
+      }
+      return `
+        <article class="review-card">
+          <div class="review-top">
+            <div style="min-width:0">
+              <span class="review-kind">${KIND_LABEL[p.kind] || "제안"}${p.persona ? ` · ${esc(p.persona)}` : ""}</span>
+              <a class="review-title" href="./detail.html?id=${encodeURIComponent(p.toiletId)}">${esc(p.title)}</a>
+            </div>
+            <span class="status-tag ${status}">${REVIEW_LABEL[status]}</span>
+          </div>
+          <p class="review-meta">${meta}${p.hasPhoto ? " · 사진 첨부" : ""}</p>
+          ${change}${memo}${actions}
+        </article>`;
+    }).join("");
+  }
+
+  function showList(filter, scroll = true) {
+    reviewFilter = filter;
+    renderProposals();
+    if (scroll) $("proposal-panel").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  document.querySelector(".my-stats").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-show]");
+    if (b) showList(b.dataset.show);
+  });
+  document.querySelector(".review-filters").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-filter]");
+    if (b) showList(b.dataset.filter, false);
   });
 
-  accountEl.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const form = e.target;
-    const errEl = document.getElementById("auth-error");
-    const submit = form.querySelector('button[type="submit"]');
-    const v = Object.fromEntries(new FormData(form));
-    submit.disabled = true;
-    const res = authMode === "signup" ? await App.Auth.signup(v) : await App.Auth.login(v);
-    submit.disabled = false;
-    if (!res.ok) { errEl.textContent = res.error; errEl.hidden = false; return; }
-    authMode = null;
-    renderAccount();
+  $("saved-proposals").addEventListener("click", (e) => {
+    const rv = e.target.closest("[data-review]");
+    if (rv) {
+      const id = rv.dataset.review, to = rv.dataset.to;
+      const memo = ($("memo-" + id)?.value || "").trim();
+      App.Proposals.update(id, to === "pending"
+        ? { status: "pending", reviewedAt: undefined, memo: undefined }
+        : { status: to, reviewedAt: new Date().toLocaleDateString("ko-KR"), memo: memo || undefined });
+      renderProposals();
+      snack(to === "done" ? "검토 완료로 변경했어요" : to === "rejected" ? "반려로 변경했어요" : "검토 대기로 되돌렸어요");
+      return;
+    }
+    const cancel = e.target.closest("[data-cancel]");
+    if (cancel && confirm("이 제안을 취소할까요? 취소한 제안은 되돌릴 수 없어요.")) {
+      App.Proposals.remove(cancel.dataset.cancel);
+      renderProposals();
+    }
   });
+
+  /* ---------- 설정 ---------- */
+  function renderPersonaChips() {
+    $("persona-chips").innerHTML = Object.entries(PERSONAS).map(([k, p]) =>
+      `<button type="button" class="chip${myPersona === k ? " active" : ""}" role="radio" aria-checked="${myPersona === k}" data-persona="${k}">${p.name}</button>`).join("") +
+      `<button type="button" class="chip${!myPersona ? " active" : ""}" role="radio" aria-checked="${!myPersona}" data-persona="">선택 안 함</button>`;
+  }
+  $("persona-chips").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-persona]");
+    if (!b) return;
+    myPersona = b.dataset.persona || null;
+    store.set(K_PERSONA, myPersona);
+    renderPersonaChips();
+    snack(myPersona ? `내 이용 상황: ${PERSONAS[myPersona].name}` : "내 이용 상황을 해제했어요");
+  });
+  $("notify-toggle").addEventListener("change", (e) => {
+    notifyOn = e.target.checked;
+    store.set(K_NOTIFY, notifyOn ? "1" : "0");
+    snack(notifyOn ? "검토 결과 알림을 켰어요" : "검토 결과 알림을 껐어요");
+  });
+  $("admin-toggle").addEventListener("change", (e) => {
+    adminMode = e.target.checked;
+    store.set(K_ADMIN, adminMode ? "1" : "0");
+    // 위쪽 '내 개선 제안' 높이가 바뀌어도 누른 스위치가 화면에서 제자리에 있도록 스크롤을 보정
+    const row = e.target.closest(".my-row");
+    const before = row.getBoundingClientRect().top;
+    renderProposals();
+    window.scrollBy(0, row.getBoundingClientRect().top - before);
+    snack(adminMode ? "관리자 모드를 켰어요" : "관리자 모드를 껐어요");
+  });
+
+  /* ---------- 도움말 시트 ---------- */
+  const INFO = {
+    guide: { title: "개선 제안 가이드", html: `<div class="my-info"><h3>좋은 제안은 이렇게 써요</h3><ul><li>어느 화장실인지, 누가 이용하는지 먼저 정해요.</li><li>실제로 막힌 지점을 구체적으로 적어요. 예: 입구 앞 5cm 턱</li><li>원하는 개선 방향을 하나 이상 골라요.</li></ul><h3>처리 절차</h3><ul><li><b>검토 대기</b> 운영자가 내용을 확인하는 중이에요.</li><li><b>검토 완료</b> 근거를 확인했고 개선 과제로 등록했어요.</li><li><b>반려</b> 근거가 부족하거나 중복된 제안이에요. 운영자 메모를 확인해 주세요.</li></ul></div>` },
+    privacy: { title: "개인정보·사진 안내", html: `<div class="my-info"><h3>올리면 안 되는 정보</h3><ul><li>얼굴이 보이는 사진, 화장실 내부에 사람이 있는 사진</li><li>이름·연락처 등 다른 사람을 알아볼 수 있는 정보</li></ul><h3>저장 방식</h3><p>이 프로토타입은 제안을 이 브라우저에만 저장하고, 첨부 사진은 저장하지 않아요. 실서비스에서는 동의 절차와 보관 기간을 별도로 안내해야 해요.</p></div>` },
+  };
+  let lastFocus = null;
+  function openInfo(key) {
+    const info = INFO[key];
+    if (!info) return;
+    lastFocus = document.activeElement;
+    $("info-title").textContent = info.title;
+    $("info-body").innerHTML = info.html;
+    $("info-backdrop").classList.add("open");
+    document.body.style.overflow = "hidden";
+    $("info-close").focus();
+  }
+  function closeInfo() {
+    $("info-backdrop").classList.remove("open");
+    document.body.style.overflow = "";
+    if (lastFocus) lastFocus.focus();
+  }
+  document.querySelector('[aria-labelledby="help-title"]').addEventListener("click", (e) => {
+    const b = e.target.closest("[data-info]");
+    if (b) openInfo(b.dataset.info);
+  });
+  $("info-close").addEventListener("click", closeInfo);
+  $("info-backdrop").addEventListener("click", (e) => { if (e.target === $("info-backdrop")) closeInfo(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && $("info-backdrop").classList.contains("open")) closeInfo(); });
+
+  $("reset-btn").addEventListener("click", () => {
+    if (!confirm("이 기기에 저장된 개선 제안과 정보 수정 제안을 모두 지울까요? 되돌릴 수 없어요.")) return;
+    App.Proposals.clear();
+    renderProposals();
+    snack("내 기록을 초기화했어요");
+  });
+
+  /* ---------- 전체 렌더 ---------- */
+  function renderMy() {
+    const user = App.Auth.currentUser();
+    if (!user) return;
+    $("my-avatar").textContent = user.nickname.slice(0, 1);
+    $("my-name").textContent = user.nickname + "님";
+    $("my-email").textContent = user.email;
+    $("notify-toggle").checked = notifyOn;
+    renderPersonaChips();
+    renderProposals();
+  }
+
 
   renderAccount();
 
-  const params = new URLSearchParams(location.search);
-  let activeTab = ["recent", "proposals"].includes(params.get("tab")) ? params.get("tab") : "favorites";
-  if (params.get("submitted") === "1") document.getElementById("submit-toast").hidden = false;
-
-  document.querySelectorAll(".subtab").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      activeTab = btn.dataset.tab;
-      document.querySelectorAll(".subtab").forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-      render();
-    });
-  });
-  document.querySelectorAll(".subtab").forEach((b) => b.classList.toggle("active", b.dataset.tab === activeTab));
-
-  /* ---------- 내 개선 제안 ---------- */
-  function renderProposals() {
-    const cardList = document.getElementById("card-list");
-    const emptyState = document.getElementById("empty-state");
-    const props = App.Proposals.list();
-    if (props.length === 0) {
-      cardList.innerHTML = "";
-      emptyState.hidden = false;
-      document.getElementById("empty-icon").textContent = "✎";
-      document.getElementById("empty-title").textContent = "제출한 개선 제안이 없습니다";
-      document.getElementById("empty-sub").textContent = "불편했던 점이나 실제와 다른 정보를 알려 주면 더 나은 화장실을 만드는 데 쓰여요";
-      const link = document.getElementById("empty-link");
-      link.href = "./propose.html"; link.textContent = "개선 제안하기";
-      return;
-    }
-    emptyState.hidden = true;
-    const esc = App.esc;
-    cardList.innerHTML = props.map((p) => `
-      <article class="prop-card">
-        <div class="prop-top">
-          <div style="min-width:0">
-            <span class="prop-kind">${App.Proposals.KIND[p.kind] || "제안"}${p.persona ? ` · ${esc(p.persona)}` : ""}${p.item ? ` · ${esc(p.item)}` : ""}</span>
-            <a class="prop-title" href="./detail.html?id=${encodeURIComponent(p.toiletId)}">${esc(p.title)}</a>
-          </div>
-          <span class="status-tag ${p.status}">${App.Proposals.STATUS[p.status] || p.status}</span>
-        </div>
-        <span class="prop-meta">${new Date(p.createdAt).toLocaleDateString("ko-KR")} 제출${p.hasPhoto ? " · 사진 첨부" : ""}${p.author ? ` · ${esc(p.author)}` : ""}</span>
-        <details><summary>제안 내용 보기</summary><p class="prop-body">${esc(p.body)}</p></details>
-        ${p.status === "pending" ? `<div class="prop-actions"><button class="text-btn" type="button" data-cancel="${p.id}">제안 취소</button></div>` : ""}
-      </article>`).join("");
-  }
-  document.getElementById("card-list").addEventListener("click", (e) => {
-    const b = e.target.closest("[data-cancel]");
-    if (!b || !confirm("이 제안을 취소할까요? 취소한 제안은 되돌릴 수 없어요.")) return;
-    App.Proposals.remove(b.dataset.cancel);
-    render();
-  });
-
-  let toilets = [];
+  /* 화장실 이름을 보여 주기 위해 데이터를 불러온 뒤 즐겨찾기·최근 목록을 그린다 */
   try {
-    toilets = await App.loadToilets();
+    const toilets = await App.loadToilets();
+    toiletMap = new Map(toilets.map((t) => [t.id, t]));
   } catch (err) {
-    document.getElementById("card-list").innerHTML = "";
-    document.getElementById("empty-state").hidden = false;
-    document.getElementById("empty-icon").textContent = "⟳";
-    document.getElementById("empty-title").textContent = "정보를 불러오지 못했습니다";
-    document.getElementById("empty-sub").textContent = "네트워크 상태를 확인한 뒤 새로고침해 주세요";
     console.error(err);
-    return;
   }
-
-  function render() {
-    const cardList = document.getElementById("card-list");
-    const emptyState = document.getElementById("empty-state");
-    const favIds = App.getFavorites();
-    document.getElementById("fav-count").textContent = favIds.length;
-    document.getElementById("prop-count").textContent = App.Proposals.list().length || "";
-    const emptyLink = document.getElementById("empty-link");
-    emptyLink.href = "../index.html"; emptyLink.textContent = "화장실 둘러보기";
-    if (activeTab === "proposals") return renderProposals();
-
-    let items = [];
-    if (activeTab === "favorites") {
-      items = favIds.map((id) => ({ t: toilets.find((x) => x.id === id), sub: null })).filter((x) => x.t);
-    } else {
-      items = App.getRecent()
-        .map((r) => ({ t: toilets.find((x) => x.id === r.id), sub: App.relativeTime(r.viewedAt) }))
-        .filter((x) => x.t);
-    }
-
-    if (items.length === 0) {
-      cardList.innerHTML = "";
-      emptyState.hidden = false;
-      document.getElementById("empty-icon").textContent = activeTab === "favorites" ? "☆" : "🕘";
-      document.getElementById("empty-title").textContent =
-        activeTab === "favorites" ? "저장한 공간이 없습니다" : "최근 확인한 공간이 없습니다";
-      document.getElementById("empty-sub").textContent =
-        activeTab === "favorites"
-          ? "조건에 맞는 화장실을 찾아 저장하면 여기에서 다시 볼 수 있어요"
-          : "화장실 상세를 확인하면 이곳에 자동으로 기록돼요";
-      return;
-    }
-    emptyState.hidden = true;
-
-    cardList.innerHTML = items.map(({ t, sub }) => {
-      const fav = App.isFavorite(t.id);
-      const badges = App.badgesOf(t).slice(0, 3);
-      return `
-        <div class="toilet-card" style="align-items:center">
-          <a href="./detail.html?id=${t.id}" style="display:flex;gap:12px;flex:1;min-width:0;text-decoration:none;color:inherit">
-            <div class="thumb">이미지</div>
-            <div class="card-body">
-              <span class="card-name">${t.name}${App.srcTag(t)}</span>
-              <span class="card-dist">${sub || t.area}</span>
-              <div class="badge-row">${badges.map((b) => `<span class="badge ok">${b}</span>`).join("")}</div>
-            </div>
-          </a>
-          ${activeTab === "favorites"
-            ? `<button class="fav-toggle active" type="button" data-id="${t.id}" aria-label="즐겨찾기 해제">★</button>`
-            : ""}
-        </div>`;
-    }).join("");
-
-    if (activeTab === "favorites") {
-      cardList.querySelectorAll(".fav-toggle").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          App.toggleFavorite(btn.dataset.id);
-          render();
-        });
-      });
-    }
-  }
-
-  render();
+  renderFavorites();
+  renderRecent();
+  App.enableDragScroll($("recent-list"));   // 최근 본 화장실: 손가락(터치)·마우스로 옆으로 넘기기
 })();
 </script>
 </body>

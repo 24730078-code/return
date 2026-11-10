@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" role="img" aria-label="지하철역 화장실 입구 통로">
+  <rect width="640" height="480" fill="#EEF6FB"/>
+  <!-- 천장 -->
+  <path d="M0 0 H640 L520 120 H120 Z" fill="#DDEAF3"/>
+  <rect x="200" y="40" width="240" height="10" rx="5" fill="#FFFFFF"/><rect x="250" y="80" width="140" height="8" rx="4" fill="#FFFFFF"/>
+  <!-- 양쪽 벽 타일 -->
+  <path d="M0 0 L120 120 V360 L0 480Z" fill="#F7FBFE"/>
+  <path d="M640 0 L520 120 V360 L640 480Z" fill="#F7FBFE"/>
+  <g stroke="#D3E7F4" stroke-width="2">
+    <path d="M0 80 L120 170 M0 160 L120 220 M0 240 L120 270 M0 320 L120 320 M0 400 L120 370"/>
+    <path d="M640 80 L520 170 M640 160 L520 220 M640 240 L520 270 M640 320 L520 320 M640 400 L520 370"/>
+  </g>
+  <!-- 띠 -->
+  <path d="M0 200 L120 245 V262 L0 225Z" fill="#7CC8EE"/>
+  <path d="M640 200 L520 245 V262 L640 225Z" fill="#7CC8EE"/>
+  <!-- 정면 벽 -->
+  <rect x="120" y="120" width="400" height="240" fill="#F2F8FC"/>
+  <!-- 입구 -->
+  <rect x="230" y="190" width="180" height="170" rx="4" fill="#3E6F8E"/>
+  <rect x="244" y="204" width="152" height="156" fill="#2F5873"/>
+  <rect x="250" y="210" width="140" height="80" fill="#4A7F9E" opacity=".6"/>
+  <!-- 안내판 -->
+  <rect x="215" y="140" width="210" height="38" rx="6" fill="#2F5873"/>
+  <text x="292" y="166" font-family="Pretendard, sans-serif" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle">화장실</text>
+  <text x="372" y="166" font-family="Pretendard, sans-serif" font-size="13" fill="#BFE2F4" text-anchor="middle">Toilet</text>
+  <path d="M398 152 l12 7 -12 7z" fill="#7CC8EE"/>
+  <!-- 바닥 -->
+  <path d="M0 480 L120 360 H520 L640 480Z" fill="#E1EEF6"/>
+  <g stroke="#CFE2EE" stroke-width="2"><path d="M320 360 V480 M220 360 L160 480 M420 360 L480 480 M60 420 H580"/></g>
+  <!-- 점자블록 -->
+  <path d="M300 360 h40 l12 120 h-64z" fill="#F3D27A" opacity=".85"/>
+</svg>

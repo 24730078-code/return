@@ -1,0 +1,1637 @@
+[
+  {
+    "id": "s01",
+    "daysAgo": 2,
+    "status": "pending",
+    "kind": "info",
+    "toiletId": "t024",
+    "toiletName": "잠두체육회화장실",
+    "area": "중구",
+    "item": "청소·고장",
+    "current": "",
+    "actual": "청결 불량",
+    "checkedDate": -2,
+    "memo": "여자화장실 세면대 주변이 물바다이고 휴지통이 넘쳐 있어요."
+  },
+  {
+    "id": "s02",
+    "daysAgo": 5,
+    "status": "pending",
+    "kind": "comfort",
+    "toiletId": "t024",
+    "toiletName": "잠두체육회화장실",
+    "area": "중구",
+    "persona": "야간 귀가자·여성",
+    "ideas": [
+      "야간 조명 개선"
+    ],
+    "text": "산책로 쪽에서 화장실로 들어가는 길이 밤에 너무 어두워요. 입구 조명을 밝게 해 주세요."
+  },
+  {
+    "id": "s03",
+    "daysAgo": 9,
+    "status": "pending",
+    "kind": "info",
+    "toiletId": "t024",
+    "toiletName": "잠두체육회화장실",
+    "area": "중구",
+    "item": "청소·고장",
+    "current": "",
+    "actual": "시설 고장",
+    "checkedDate": -9,
+    "memo": "장애인 칸 비상벨을 눌러도 소리가 나지 않아요.",
+    "facility": "hasBell"
+  },
+  {
+    "id": "s04",
+    "daysAgo": 3,
+    "status": "pending",
+    "kind": "comfort",
+    "toiletId": "t065",
+    "toiletName": "호현당화장실",
+    "area": "중구",
+    "persona": "휠체어·보행보조",
+    "ideas": [
+      "손잡이 설치",
+      "안내 표지 개선"
+    ],
+    "text": "장애인 칸 손잡이가 한쪽에만 있고, 입구 안내 표지가 작아서 찾기 어려워요."
+  },
+  {
+    "id": "s05",
+    "daysAgo": 6,
+    "status": "pending",
+    "kind": "info",
+    "toiletId": "t065",
+    "toiletName": "호현당화장실",
+    "area": "중구",
+    "item": "청소·고장",
+    "current": "",
+    "actual": "청소도구 적치",
+    "checkedDate": -6,
+    "memo": "장애인 칸 안에 청소도구가 쌓여 있어서 휠체어가 들어갈 수 없어요."
+  },
+  {
+    "id": "s06",
+    "daysAgo": 1,
+    "status": "pending",
+    "kind": "comfort",
+    "toiletId": "t150",
+    "toiletName": "다산어린이공원",
+    "area": "중구",
+    "persona": "영유아 동반 보호자",
+    "ideas": [
+      "남자화장실에도 교환대"
+    ],
+    "text": "기저귀 교환대가 여자화장실에만 있어서 아빠 혼자 아이를 데려오면 쓸 수가 없어요."
+  },
+  {
+    "id": "s07",
+    "daysAgo": 4,
+    "status": "pending",
+    "kind": "info",
+    "toiletId": "t150",
+    "toiletName": "다산어린이공원",
+    "area": "중구",
+    "item": "청소·고장",
+    "current": "",
+    "actual": "청결 불량",
+    "checkedDate": -4,
+    "memo": "어린이용 변기 주변 바닥이 늘 젖어 있어 미끄러워요."
+  },
+  {
+    "id": "s08",
+    "daysAgo": 7,
+    "status": "pending",
+    "kind": "comfort",
+    "toiletId": "t096",
+    "toiletName": "목멱산방화장실",
+    "area": "중구",
+    "persona": "임산부·노약자",
+    "ideas": [
+      "대기·휴식용 의자"
+    ],
+    "text": "주말에 줄이 길어서 오래 서 있어야 해요. 입구에 앉아서 기다릴 의자가 있으면 좋겠어요."
+  },
+  {
+    "id": "s09",
+    "daysAgo": 20,
+    "status": "done",
+    "reviewedDaysAgo": 12,
+    "kind": "info",
+    "toiletId": "t096",
+    "toiletName": "목멱산방화장실",
+    "area": "중구",
+    "item": "청소·고장",
+    "current": "",
+    "actual": "시설 고장",
+    "checkedDate": -20,
+    "memo": "남자화장실 세면대 수도꼭지가 고장 나 물이 안 나와요.",
+    "review": "수도꼭지 교체 완료했습니다."
+  },
+  {
+    "id": "s10",
+    "daysAgo": 2,
+    "status": "pending",
+    "kind": "comfort",
+    "toiletId": "t025",
+    "toiletName": "남대문시장 공중화장실",
+    "area": "중구",
+    "persona": "기타 이용자",
+    "ideas": [
+      "청소·위생용품 비치"
+    ],
+    "text": "오후만 되면 휴지와 비누가 떨어져 있어요. 보충 횟수를 늘려 주세요."
+  },
+  {
+    "id": "s11",
+    "daysAgo": 30,
+    "status": "done",
+    "reviewedDaysAgo": 21,
+    "kind": "comfort",
+    "toiletId": "t025",
+    "toiletName": "남대문시장 공중화장실",
+    "area": "중구",
+    "persona": "기타 이용자",
+    "ideas": [
+      "안내 표지 개선"
+    ],
+    "text": "시장 안에서 화장실 위치를 알려 주는 안내판이 없어요.",
+    "review": "시장 입구 3곳에 안내판을 설치했습니다."
+  },
+  {
+    "id": "s12",
+    "daysAgo": 8,
+    "status": "pending",
+    "kind": "comfort",
+    "toiletId": "t019",
+    "toiletName": "응봉근린공원(동산초교위)",
+    "area": "중구",
+    "persona": "야간 귀가자·여성",
+    "ideas": [
+      "불법촬영 정기 점검"
+    ],
+    "text": "불법촬영 점검을 언제 했는지 입구에 표시해 주면 안심하고 쓸 수 있을 것 같아요."
+  },
+  {
+    "id": "s13",
+    "daysAgo": 3,
+    "status": "pending",
+    "kind": "info",
+    "toiletId": "t189",
+    "toiletName": "종묘광장",
+    "area": "종로구",
+    "item": "청소·고장",
+    "current": "",
+    "actual": "청결 불량",
+    "checkedDate": -3,
+    "memo": "남자화장실 소변기 주변 악취가 심해요."
+  },
+  {
+    "id": "s14",
+    "daysAgo": 15,
+    "status": "rejected",
+    "reviewedDaysAgo": 10,
+    "kind": "info",
+    "toiletId": "t132",
+    "toiletName": "청구어린이공원",
+    "area": "중구",
+    "item": "기저귀 교환대",
+    "current": "있음",
+    "actual": "없음",
+    "checkedDate": -15,
+    "memo": "교환대를 못 찾았어요.",
+    "review": "현장 확인 결과 여자화장실 입구 안쪽에 설치되어 있습니다."
+  },
+  {
+    "id": "s15",
+    "daysAgo": 5,
+    "status": "pending",
+    "kind": "comfort",
+    "toiletId": "t005",
+    "toiletName": "충현공영주차장 화장실",
+    "area": "중구",
+    "persona": "야간 귀가자·여성",
+    "ideas": [
+      "비상벨 설치·작동 점검",
+      "입구 CCTV 설치"
+    ],
+    "text": "24시간 열려 있는데 비상벨도 CCTV도 없어서 밤에 이용하기 무서워요."
+  },
+  {
+    "id": "s16",
+    "daysAgo": 37,
+    "status": "done",
+    "reviewedDaysAgo": 32,
+    "kind": "comfort",
+    "toiletId": "t002",
+    "toiletName": "시청B 지하상가",
+    "area": "중구",
+    "persona": "기타 이용자",
+    "ideas": [
+      "청소·위생용품 비치"
+    ],
+    "text": "휴지와 비누가 자주 떨어져 있어요.",
+    "review": "청소 주기를 하루 2회에서 4회로 늘렸습니다."
+  },
+  {
+    "id": "s17",
+    "daysAgo": 44,
+    "status": "done",
+    "reviewedDaysAgo": 38,
+    "kind": "comfort",
+    "toiletId": "t002",
+    "toiletName": "시청B 지하상가",
+    "area": "중구",
+    "persona": "휠체어·보행보조",
+    "ideas": [
+      "손잡이 설치"
+    ],
+    "text": "장애인 칸 손잡이가 흔들려요.",
+    "review": "손잡이를 새로 고정했습니다."
+  },
+  {
+    "id": "s18",
+    "daysAgo": 2,
+    "status": "pending",
+    "kind": "info",
+    "toiletId": "t093",
+    "toiletName": "시청A 지하상가",
+    "area": "중구",
+    "item": "청소·고장",
+    "current": "",
+    "actual": "청결 불량",
+    "checkedDate": -2,
+    "memo": "악취가 심하고 휴지통이 넘쳐 있어요."
+  },
+  {
+    "id": "s19",
+    "daysAgo": 18,
+    "status": "done",
+    "reviewedDaysAgo": 10,
+    "kind": "comfort",
+    "toiletId": "t056",
+    "toiletName": "서울시청 본관 B1층 시민청 외부",
+    "area": "중구",
+    "persona": "영유아 동반 보호자",
+    "ideas": [
+      "남자화장실에도 교환대"
+    ],
+    "text": "남자화장실에도 기저귀 교환대가 있으면 좋겠어요.",
+    "review": "남자화장실에 교환대를 설치했습니다."
+  },
+  {
+    "id": "s20",
+    "daysAgo": 25,
+    "status": "done",
+    "reviewedDaysAgo": 20,
+    "kind": "comfort",
+    "toiletId": "t053",
+    "toiletName": "소공동주민센터",
+    "area": "중구",
+    "persona": "야간 귀가자·여성",
+    "ideas": [
+      "야간 조명 개선"
+    ],
+    "text": "입구 쪽 조명이 어두워요.",
+    "review": "입구 조명을 LED로 교체했습니다."
+  },
+  {
+    "id": "s21",
+    "daysAgo": 1,
+    "status": "pending",
+    "kind": "info",
+    "toiletId": "t028",
+    "toiletName": "소공지하상가B",
+    "area": "중구",
+    "item": "청소·고장",
+    "current": "",
+    "actual": "시설 고장",
+    "checkedDate": -1,
+    "memo": "변기 물이 안 내려가는 칸이 있어요."
+  },
+  {
+    "id": "s22",
+    "daysAgo": 39,
+    "status": "done",
+    "reviewedDaysAgo": 32,
+    "kind": "comfort",
+    "toiletId": "t155",
+    "toiletName": "다동소공원",
+    "area": "중구",
+    "persona": "휠체어·보행보조",
+    "ideas": [
+      "안내 표지 개선"
+    ],
+    "text": "장애인 칸 위치 안내가 잘 안 보여요.",
+    "review": "입구에 큰 안내 표지를 붙였습니다."
+  },
+  {
+    "id": "s23",
+    "daysAgo": 46,
+    "status": "done",
+    "reviewedDaysAgo": 38,
+    "kind": "info",
+    "toiletId": "t046",
+    "toiletName": "정동근린공원",
+    "area": "중구",
+    "item": "청소·고장",
+    "current": "",
+    "actual": "시설 고장",
+    "checkedDate": -46,
+    "memo": "세면대 수도꼭지에서 물이 안 나와요.",
+    "review": "수도꼭지를 교체했습니다."
+  },
+  {
+    "id": "s24",
+    "daysAgo": 13,
+    "status": "done",
+    "reviewedDaysAgo": 8,
+    "kind": "info",
+    "toiletId": "t046",
+    "toiletName": "정동근린공원",
+    "area": "중구",
+    "item": "청소·고장",
+    "current": "",
+    "actual": "청결 불량",
+    "checkedDate": -13,
+    "memo": "바닥이 늘 젖어 있어 미끄러워요.",
+    "review": "미끄럼 방지 매트를 깔고 배수구를 정비했습니다."
+  },
+  {
+    "id": "s25",
+    "daysAgo": 20,
+    "status": "done",
+    "reviewedDaysAgo": 14,
+    "kind": "comfort",
+    "toiletId": "t160",
+    "toiletName": "서울중앙우체국(포스트타워)",
+    "area": "중구",
+    "persona": "야간 귀가자·여성",
+    "ideas": [
+      "불법촬영 정기 점검"
+    ],
+    "text": "불법촬영 점검 여부를 알고 싶어요.",
+    "review": "월 1회 점검하고 결과를 입구에 게시합니다."
+  },
+  {
+    "id": "s26",
+    "daysAgo": 27,
+    "status": "done",
+    "reviewedDaysAgo": 20,
+    "kind": "comfort",
+    "toiletId": "t152",
+    "toiletName": "서울시청 서소문청사 1층 로비",
+    "area": "중구",
+    "persona": "기타 이용자",
+    "ideas": [
+      "청소·위생용품 비치"
+    ],
+    "text": "휴지와 비누가 자주 떨어져 있어요.",
+    "review": "청소 주기를 하루 2회에서 4회로 늘렸습니다."
+  },
+  {
+    "id": "s27",
+    "daysAgo": 9,
+    "status": "pending",
+    "kind": "comfort",
+    "toiletId": "t152",
+    "toiletName": "서울시청 서소문청사 1층 로비",
+    "area": "중구",
+    "persona": "휠체어·보행보조",
+    "ideas": [
+      "입구 턱 제거·경사로"
+    ],
+    "text": "입구 턱 때문에 휠체어로 들어가기 힘들어요."
+  },
+  {
+    "id": "s28",
+    "daysAgo": 41,
+    "status": "done",
+    "reviewedDaysAgo": 36,
+    "kind": "comfort",
+    "toiletId": "t159",
+    "toiletName": "시립미술관 서소문본관",
+    "area": "중구",
+    "persona": "휠체어·보행보조",
+    "ideas": [
+      "손잡이 설치"
+    ],
+    "text": "장애인 칸 손잡이가 흔들려요.",
+    "review": "손잡이를 새로 고정했습니다."
+  },
+  {
+    "id": "s29",
+    "daysAgo": 48,
+    "status": "done",
+    "reviewedDaysAgo": 42,
+    "kind": "comfort",
+    "toiletId": "t042",
+    "toiletName": "인현 지하상가",
+    "area": "중구",
+    "persona": "영유아 동반 보호자",
+    "ideas": [
+      "남자화장실에도 교환대"
+    ],
+    "text": "남자화장실에도 기저귀 교환대가 있으면 좋겠어요.",
+    "review": "남자화장실에 교환대를 설치했습니다."
+  },
+  {
+    "id": "s30",
+    "daysAgo": 8,
+    "status": "pending",
+    "kind": "comfort",
+    "toiletId": "t110",
+    "toiletName": "을지4구역A 지하상가",
+    "area": "중구",
+    "persona": "임산부·노약자",
+    "ideas": [
+      "대기·휴식용 의자"
+    ],
+    "text": "줄이 길어서 오래 서 있어야 해요."
+  },
+  {
+    "id": "s31",
+    "daysAgo": 1,
+    "status": "pending",
+    "kind": "info",
+    "toiletId": "t110",
+    "toiletName": "을지4구역A 지하상가",
+    "area": "중구",
+    "item": "청소·고장",
+    "current": "",
+    "actual": "청소도구 적치",
+    "checkedDate": -1,
+    "memo": "장애인 칸에 청소도구가 쌓여 있어요."
+  },
+  {
+    "id": "s32",
+    "daysAgo": 29,
+    "status": "done",
+    "reviewedDaysAgo": 24,
+    "kind": "comfort",
+    "toiletId": "t137",
+    "toiletName": "명동역지하상가",
+    "area": "중구",
+    "persona": "야간 귀가자·여성",
+    "ideas": [
+      "야간 조명 개선"
+    ],
+    "text": "입구 쪽 조명이 어두워요.",
+    "review": "입구 조명을 LED로 교체했습니다."
+  },
+  {
+    "id": "s33",
+    "daysAgo": 36,
+    "status": "done",
+    "reviewedDaysAgo": 30,
+    "kind": "comfort",
+    "toiletId": "t137",
+    "toiletName": "명동역지하상가",
+    "area": "중구",
+    "persona": "휠체어·보행보조",
+    "ideas": [
+      "안내 표지 개선"
+    ],
+    "text": "장애인 칸 위치 안내가 잘 안 보여요.",
+    "review": "입구에 큰 안내 표지를 붙였습니다."
+  },
+  {
+    "id": "s34",
+    "daysAgo": 43,
+    "status": "done",
+    "reviewedDaysAgo": 36,
+    "kind": "info",
+    "toiletId": "t066",
+    "toiletName": "청계5가 지하상가",
+    "area": "중구",
+    "item": "청소·고장",
+    "current": "",
+    "actual": "시설 고장",
+    "checkedDate": -43,
+    "memo": "세면대 수도꼭지에서 물이 안 나와요.",
+    "review": "수도꼭지를 교체했습니다."
+  },
+  {
+    "id": "s35",
+    "daysAgo": 50,
+    "status": "done",
+    "reviewedDaysAgo": 42,
+    "kind": "info",
+    "toiletId": "t178",
+    "toiletName": "삼청근린공원(관리실 옆)",
+    "area": "종로구",
+    "item": "청소·고장",
+    "current": "",
+    "actual": "청결 불량",
+    "checkedDate": -50,
+    "memo": "바닥이 늘 젖어 있어 미끄러워요.",
+    "review": "미끄럼 방지 매트를 깔고 배수구를 정비했습니다."
+  },
+  {
+    "id": "s36",
+    "daysAgo": 6,
+    "status": "pending",
+    "kind": "comfort",
+    "toiletId": "t180",
+    "toiletName": "와룡공원(배드민턴장)",
+    "area": "종로구",
+    "persona": "기타 이용자",
+    "ideas": [
+      "청소·위생용품 비치"
+    ],
+    "text": "오후에는 휴지가 거의 없어요."
+  },
+  {
+    "id": "s37",
+    "daysAgo": 24,
+    "status": "done",
+    "reviewedDaysAgo": 18,
+    "kind": "comfort",
+    "toiletId": "t182",
+    "toiletName": "숭인공원",
+    "area": "종로구",
+    "persona": "야간 귀가자·여성",
+    "ideas": [
+      "불법촬영 정기 점검"
+    ],
+    "text": "불법촬영 점검 여부를 알고 싶어요.",
+    "review": "월 1회 점검하고 결과를 입구에 게시합니다."
+  },
+  {
+    "id": "s38",
+    "daysAgo": 31,
+    "status": "done",
+    "reviewedDaysAgo": 24,
+    "kind": "comfort",
+    "toiletId": "t182",
+    "toiletName": "숭인공원",
+    "area": "종로구",
+    "persona": "기타 이용자",
+    "ideas": [
+      "청소·위생용품 비치"
+    ],
+    "text": "휴지와 비누가 자주 떨어져 있어요.",
+    "review": "청소 주기를 하루 2회에서 4회로 늘렸습니다."
+  },
+  {
+    "id": "s39",
+    "daysAgo": 38,
+    "status": "done",
+    "reviewedDaysAgo": 30,
+    "kind": "comfort",
+    "toiletId": "t183",
+    "toiletName": "마로니에공원(지상1층)",
+    "area": "종로구",
+    "persona": "휠체어·보행보조",
+    "ideas": [
+      "손잡이 설치"
+    ],
+    "text": "장애인 칸 손잡이가 흔들려요.",
+    "review": "손잡이를 새로 고정했습니다."
+  },
+  {
+    "id": "s40",
+    "daysAgo": 8,
+    "status": "pending",
+    "kind": "info",
+    "toiletId": "t185",
+    "toiletName": "탑골공원",
+    "area": "종로구",
+    "item": "청소·고장",
+    "current": "",
+    "actual": "청결 불량",
+    "checkedDate": -8,
+    "memo": "악취가 심하고 휴지통이 넘쳐 있어요."
+  },
+  {
+    "id": "s41",
+    "daysAgo": 12,
+    "status": "done",
+    "reviewedDaysAgo": 6,
+    "kind": "comfort",
+    "toiletId": "t189",
+    "toiletName": "종묘광장",
+    "area": "종로구",
+    "persona": "영유아 동반 보호자",
+    "ideas": [
+      "남자화장실에도 교환대"
+    ],
+    "text": "남자화장실에도 기저귀 교환대가 있으면 좋겠어요.",
+    "review": "남자화장실에 교환대를 설치했습니다."
+  },
+  {
+    "id": "s42",
+    "daysAgo": 19,
+    "status": "done",
+    "reviewedDaysAgo": 12,
+    "kind": "comfort",
+    "toiletId": "t189",
+    "toiletName": "종묘광장",
+    "area": "종로구",
+    "persona": "야간 귀가자·여성",
+    "ideas": [
+      "야간 조명 개선"
+    ],
+    "text": "입구 쪽 조명이 어두워요.",
+    "review": "입구 조명을 LED로 교체했습니다."
+  },
+  {
+    "id": "s43",
+    "daysAgo": 26,
+    "status": "done",
+    "reviewedDaysAgo": 18,
+    "kind": "comfort",
+    "toiletId": "t045",
+    "toiletName": "장충단공원",
+    "area": "중구",
+    "persona": "휠체어·보행보조",
+    "ideas": [
+      "안내 표지 개선"
+    ],
+    "text": "장애인 칸 위치 안내가 잘 안 보여요.",
+    "review": "입구에 큰 안내 표지를 붙였습니다."
+  },
+  {
+    "id": "s44",
+    "daysAgo": 33,
+    "status": "done",
+    "reviewedDaysAgo": 28,
+    "kind": "info",
+    "toiletId": "t013",
+    "toiletName": "팔각정 입구",
+    "area": "중구",
+    "item": "청소·고장",
+    "current": "",
+    "actual": "시설 고장",
+    "checkedDate": -33,
+    "memo": "세면대 수도꼭지에서 물이 안 나와요.",
+    "review": "수도꼭지를 교체했습니다."
+  },
+  {
+    "id": "s45",
+    "daysAgo": 40,
+    "status": "done",
+    "reviewedDaysAgo": 34,
+    "kind": "info",
+    "toiletId": "t013",
+    "toiletName": "팔각정 입구",
+    "area": "중구",
+    "item": "청소·고장",
+    "current": "",
+    "actual": "청결 불량",
+    "checkedDate": -40,
+    "memo": "바닥이 늘 젖어 있어 미끄러워요.",
+    "review": "미끄럼 방지 매트를 깔고 배수구를 정비했습니다."
+  },
+  {
+    "id": "s46",
+    "daysAgo": 6,
+    "status": "pending",
+    "kind": "info",
+    "toiletId": "t097",
+    "toiletName": "서소문역사공원",
+    "area": "중구",
+    "item": "청소·고장",
+    "current": "",
+    "actual": "시설 고장",
+    "checkedDate": -6,
+    "memo": "변기 물이 안 내려가는 칸이 있어요."
+  },
+  {
+    "id": "s47",
+    "daysAgo": 14,
+    "status": "done",
+    "reviewedDaysAgo": 6,
+    "kind": "comfort",
+    "toiletId": "t129",
+    "toiletName": "광희동 공중화장실",
+    "area": "중구",
+    "persona": "야간 귀가자·여성",
+    "ideas": [
+      "불법촬영 정기 점검"
+    ],
+    "text": "불법촬영 점검 여부를 알고 싶어요.",
+    "review": "월 1회 점검하고 결과를 입구에 게시합니다."
+  },
+  {
+    "id": "s48",
+    "daysAgo": 21,
+    "status": "done",
+    "reviewedDaysAgo": 16,
+    "kind": "comfort",
+    "toiletId": "t077",
+    "toiletName": "명동지하상가",
+    "area": "중구",
+    "persona": "기타 이용자",
+    "ideas": [
+      "청소·위생용품 비치"
+    ],
+    "text": "휴지와 비누가 자주 떨어져 있어요.",
+    "review": "청소 주기를 하루 2회에서 4회로 늘렸습니다."
+  },
+  {
+    "id": "s49",
+    "daysAgo": 5,
+    "status": "pending",
+    "kind": "comfort",
+    "toiletId": "t077",
+    "toiletName": "명동지하상가",
+    "area": "중구",
+    "persona": "휠체어·보행보조",
+    "ideas": [
+      "입구 턱 제거·경사로"
+    ],
+    "text": "입구 턱 때문에 휠체어로 들어가기 힘들어요."
+  },
+  {
+    "id": "s50",
+    "daysAgo": 35,
+    "status": "done",
+    "reviewedDaysAgo": 28,
+    "kind": "comfort",
+    "toiletId": "a2",
+    "toiletName": "시청역(1호선) 외부 · 5번 출구",
+    "area": "중구",
+    "persona": "휠체어·보행보조",
+    "ideas": [
+      "손잡이 설치"
+    ],
+    "text": "장애인 칸 손잡이가 흔들려요.",
+    "review": "손잡이를 새로 고정했습니다."
+  },
+  {
+    "id": "s51",
+    "daysAgo": 1,
+    "status": "pending",
+    "kind": "comfort",
+    "toiletId": "a17",
+    "toiletName": "시청역(2호선) 외부 · 11번 출구",
+    "area": "중구",
+    "persona": "임산부·노약자",
+    "ideas": [
+      "대기·휴식용 의자"
+    ],
+    "text": "줄이 길어서 오래 서 있어야 해요."
+  },
+  {
+    "id": "s52",
+    "daysAgo": 4,
+    "status": "pending",
+    "kind": "info",
+    "toiletId": "a17",
+    "toiletName": "시청역(2호선) 외부 · 11번 출구",
+    "area": "중구",
+    "item": "청소·고장",
+    "current": "",
+    "actual": "청소도구 적치",
+    "checkedDate": -4,
+    "memo": "장애인 칸에 청소도구가 쌓여 있어요."
+  },
+  {
+    "id": "s53",
+    "daysAgo": 16,
+    "status": "done",
+    "reviewedDaysAgo": 10,
+    "kind": "comfort",
+    "toiletId": "a16",
+    "toiletName": "시청역(2호선) 내부 · 10번 출구",
+    "area": "중구",
+    "persona": "영유아 동반 보호자",
+    "ideas": [
+      "남자화장실에도 교환대"
+    ],
+    "text": "남자화장실에도 기저귀 교환대가 있으면 좋겠어요.",
+    "review": "남자화장실에 교환대를 설치했습니다."
+  },
+  {
+    "id": "s54",
+    "daysAgo": 23,
+    "status": "done",
+    "reviewedDaysAgo": 16,
+    "kind": "comfort",
+    "toiletId": "a16",
+    "toiletName": "시청역(2호선) 내부 · 10번 출구",
+    "area": "중구",
+    "persona": "야간 귀가자·여성",
+    "ideas": [
+      "야간 조명 개선"
+    ],
+    "text": "입구 쪽 조명이 어두워요.",
+    "review": "입구 조명을 LED로 교체했습니다."
+  },
+  {
+    "id": "s55",
+    "daysAgo": 30,
+    "status": "done",
+    "reviewedDaysAgo": 22,
+    "kind": "comfort",
+    "toiletId": "a18",
+    "toiletName": "을지로입구역(2호선) 외부 · 4번 출구",
+    "area": "중구",
+    "persona": "휠체어·보행보조",
+    "ideas": [
+      "안내 표지 개선"
+    ],
+    "text": "장애인 칸 위치 안내가 잘 안 보여요.",
+    "review": "입구에 큰 안내 표지를 붙였습니다."
+  },
+  {
+    "id": "s56",
+    "daysAgo": 37,
+    "status": "done",
+    "reviewedDaysAgo": 32,
+    "kind": "info",
+    "toiletId": "a4",
+    "toiletName": "종각역(1호선) 외부 · 4번 출구",
+    "area": "종로구",
+    "item": "청소·고장",
+    "current": "",
+    "actual": "시설 고장",
+    "checkedDate": -37,
+    "memo": "세면대 수도꼭지에서 물이 안 나와요.",
+    "review": "수도꼭지를 교체했습니다."
+  },
+  {
+    "id": "s57",
+    "daysAgo": 9,
+    "status": "pending",
+    "kind": "comfort",
+    "toiletId": "a3",
+    "toiletName": "종각역(1호선) 외부 · 1번 출구",
+    "area": "종로구",
+    "persona": "기타 이용자",
+    "ideas": [
+      "청소·위생용품 비치"
+    ],
+    "text": "오후에는 휴지가 거의 없어요."
+  },
+  {
+    "id": "s58",
+    "daysAgo": 51,
+    "status": "done",
+    "reviewedDaysAgo": 44,
+    "kind": "info",
+    "toiletId": "a164",
+    "toiletName": "광화문역(5호선) 외부 · 7 또는8번 출구",
+    "area": "종로구",
+    "item": "청소·고장",
+    "current": "",
+    "actual": "청결 불량",
+    "checkedDate": -51,
+    "memo": "바닥이 늘 젖어 있어 미끄러워요.",
+    "review": "미끄럼 방지 매트를 깔고 배수구를 정비했습니다."
+  },
+  {
+    "id": "s59",
+    "daysAgo": 18,
+    "status": "done",
+    "reviewedDaysAgo": 10,
+    "kind": "comfort",
+    "toiletId": "a164",
+    "toiletName": "광화문역(5호선) 외부 · 7 또는8번 출구",
+    "area": "종로구",
+    "persona": "야간 귀가자·여성",
+    "ideas": [
+      "불법촬영 정기 점검"
+    ],
+    "text": "불법촬영 점검 여부를 알고 싶어요.",
+    "review": "월 1회 점검하고 결과를 입구에 게시합니다."
+  },
+  {
+    "id": "s60",
+    "daysAgo": 25,
+    "status": "done",
+    "reviewedDaysAgo": 20,
+    "kind": "comfort",
+    "toiletId": "a39",
+    "toiletName": "강남역(2호선) 내부 · 12번 출구",
+    "area": "강남구",
+    "persona": "기타 이용자",
+    "ideas": [
+      "청소·위생용품 비치"
+    ],
+    "text": "휴지와 비누가 자주 떨어져 있어요.",
+    "review": "청소 주기를 하루 2회에서 4회로 늘렸습니다."
+  },
+  {
+    "id": "s61",
+    "daysAgo": 1,
+    "status": "pending",
+    "kind": "info",
+    "toiletId": "a58",
+    "toiletName": "홍대입구역(2호선) 외부 · 2번 출구",
+    "area": "마포구",
+    "item": "청소·고장",
+    "current": "",
+    "actual": "청결 불량",
+    "checkedDate": -1,
+    "memo": "악취가 심하고 휴지통이 넘쳐 있어요."
+  },
+  {
+    "id": "s62",
+    "daysAgo": 39,
+    "status": "done",
+    "reviewedDaysAgo": 32,
+    "kind": "comfort",
+    "toiletId": "a59",
+    "toiletName": "신촌역(2호선) 외부 · 5번 출구",
+    "area": "마포구",
+    "persona": "휠체어·보행보조",
+    "ideas": [
+      "손잡이 설치"
+    ],
+    "text": "장애인 칸 손잡이가 흔들려요.",
+    "review": "손잡이를 새로 고정했습니다."
+  },
+  {
+    "id": "s63",
+    "daysAgo": 46,
+    "status": "done",
+    "reviewedDaysAgo": 38,
+    "kind": "comfort",
+    "toiletId": "a32",
+    "toiletName": "잠실역(2호선) 외부 · 1번 출구",
+    "area": "송파구",
+    "persona": "영유아 동반 보호자",
+    "ideas": [
+      "남자화장실에도 교환대"
+    ],
+    "text": "남자화장실에도 기저귀 교환대가 있으면 좋겠어요.",
+    "review": "남자화장실에 교환대를 설치했습니다."
+  },
+  {
+    "id": "s64",
+    "daysAgo": 13,
+    "status": "done",
+    "reviewedDaysAgo": 8,
+    "kind": "comfort",
+    "toiletId": "a32",
+    "toiletName": "잠실역(2호선) 외부 · 1번 출구",
+    "area": "송파구",
+    "persona": "야간 귀가자·여성",
+    "ideas": [
+      "야간 조명 개선"
+    ],
+    "text": "입구 쪽 조명이 어두워요.",
+    "review": "입구 조명을 LED로 교체했습니다."
+  },
+  {
+    "id": "s65",
+    "daysAgo": 20,
+    "status": "done",
+    "reviewedDaysAgo": 14,
+    "kind": "comfort",
+    "toiletId": "a28",
+    "toiletName": "건대입구역(2호선) 내부 · 2번 출구",
+    "area": "광진구",
+    "persona": "휠체어·보행보조",
+    "ideas": [
+      "안내 표지 개선"
+    ],
+    "text": "장애인 칸 위치 안내가 잘 안 보여요.",
+    "review": "입구에 큰 안내 표지를 붙였습니다."
+  },
+  {
+    "id": "s66",
+    "daysAgo": 27,
+    "status": "done",
+    "reviewedDaysAgo": 20,
+    "kind": "info",
+    "toiletId": "a157",
+    "toiletName": "여의도역(5호선) 외부 · 6번 출구",
+    "area": "영등포구",
+    "item": "청소·고장",
+    "current": "",
+    "actual": "시설 고장",
+    "checkedDate": -27,
+    "memo": "세면대 수도꼭지에서 물이 안 나와요.",
+    "review": "수도꼭지를 교체했습니다."
+  },
+  {
+    "id": "s67",
+    "daysAgo": 9,
+    "status": "pending",
+    "kind": "info",
+    "toiletId": "a24",
+    "toiletName": "왕십리역(2호선) 외부 · 6-1번 출구",
+    "area": "성동구",
+    "item": "청소·고장",
+    "current": "",
+    "actual": "시설 고장",
+    "checkedDate": -9,
+    "memo": "변기 물이 안 내려가는 칸이 있어요."
+  },
+  {
+    "id": "s68",
+    "daysAgo": 41,
+    "status": "done",
+    "reviewedDaysAgo": 36,
+    "kind": "info",
+    "toiletId": "a44",
+    "toiletName": "사당역(2호선) 외부 · 7번 출구",
+    "area": "동작구",
+    "item": "청소·고장",
+    "current": "",
+    "actual": "청결 불량",
+    "checkedDate": -41,
+    "memo": "바닥이 늘 젖어 있어 미끄러워요.",
+    "review": "미끄럼 방지 매트를 깔고 배수구를 정비했습니다."
+  },
+  {
+    "id": "s69",
+    "daysAgo": 48,
+    "status": "done",
+    "reviewedDaysAgo": 42,
+    "kind": "comfort",
+    "toiletId": "a267",
+    "toiletName": "고속터미널역(7호선) 외부 · 3번 출구",
+    "area": "서초구",
+    "persona": "야간 귀가자·여성",
+    "ideas": [
+      "불법촬영 정기 점검"
+    ],
+    "text": "불법촬영 점검 여부를 알고 싶어요.",
+    "review": "월 1회 점검하고 결과를 입구에 게시합니다."
+  },
+  {
+    "id": "s70",
+    "daysAgo": 15,
+    "status": "done",
+    "reviewedDaysAgo": 8,
+    "kind": "comfort",
+    "toiletId": "a267",
+    "toiletName": "고속터미널역(7호선) 외부 · 3번 출구",
+    "area": "서초구",
+    "persona": "기타 이용자",
+    "ideas": [
+      "청소·위생용품 비치"
+    ],
+    "text": "휴지와 비누가 자주 떨어져 있어요.",
+    "review": "청소 주기를 하루 2회에서 4회로 늘렸습니다."
+  },
+  {
+    "id": "s71",
+    "daysAgo": 1,
+    "status": "pending",
+    "kind": "comfort",
+    "toiletId": "a48",
+    "toiletName": "신림역(2호선) 내부 · 4번 출구",
+    "area": "관악구",
+    "persona": "휠체어·보행보조",
+    "ideas": [
+      "입구 턱 제거·경사로"
+    ],
+    "text": "입구 턱 때문에 휠체어로 들어가기 힘들어요."
+  },
+  {
+    "id": "s72",
+    "daysAgo": 29,
+    "status": "done",
+    "reviewedDaysAgo": 24,
+    "kind": "comfort",
+    "toiletId": "a246",
+    "toiletName": "노원역(7호선) 외부 · 6번 출구",
+    "area": "노원구",
+    "persona": "휠체어·보행보조",
+    "ideas": [
+      "손잡이 설치"
+    ],
+    "text": "장애인 칸 손잡이가 흔들려요.",
+    "review": "손잡이를 새로 고정했습니다."
+  },
+  {
+    "id": "s73",
+    "daysAgo": 36,
+    "status": "done",
+    "reviewedDaysAgo": 30,
+    "kind": "comfort",
+    "toiletId": "a57",
+    "toiletName": "합정역(2호선) 내부 · 1번 출구",
+    "area": "마포구",
+    "persona": "영유아 동반 보호자",
+    "ideas": [
+      "남자화장실에도 교환대"
+    ],
+    "text": "남자화장실에도 기저귀 교환대가 있으면 좋겠어요.",
+    "review": "남자화장실에 교환대를 설치했습니다."
+  },
+  {
+    "id": "s74",
+    "daysAgo": 43,
+    "status": "done",
+    "reviewedDaysAgo": 36,
+    "kind": "comfort",
+    "toiletId": "a36",
+    "toiletName": "삼성역(2호선) 외부 · 3번 출구",
+    "area": "강남구",
+    "persona": "야간 귀가자·여성",
+    "ideas": [
+      "야간 조명 개선"
+    ],
+    "text": "입구 쪽 조명이 어두워요.",
+    "review": "입구 조명을 LED로 교체했습니다."
+  },
+  {
+    "id": "s75",
+    "daysAgo": 3,
+    "status": "pending",
+    "kind": "comfort",
+    "toiletId": "a37",
+    "toiletName": "선릉역(2호선) 외부 · 1번 출구",
+    "area": "강남구",
+    "persona": "임산부·노약자",
+    "ideas": [
+      "대기·휴식용 의자"
+    ],
+    "text": "줄이 길어서 오래 서 있어야 해요."
+  },
+  {
+    "id": "s76",
+    "daysAgo": 6,
+    "status": "pending",
+    "kind": "info",
+    "toiletId": "a37",
+    "toiletName": "선릉역(2호선) 외부 · 1번 출구",
+    "area": "강남구",
+    "item": "청소·고장",
+    "current": "",
+    "actual": "청소도구 적치",
+    "checkedDate": -6,
+    "memo": "장애인 칸에 청소도구가 쌓여 있어요."
+  },
+  {
+    "id": "s77",
+    "daysAgo": 24,
+    "status": "done",
+    "reviewedDaysAgo": 18,
+    "kind": "comfort",
+    "toiletId": "a94",
+    "toiletName": "교대역(3호선) 외부 · 12번 출구",
+    "area": "서초구",
+    "persona": "휠체어·보행보조",
+    "ideas": [
+      "안내 표지 개선"
+    ],
+    "text": "장애인 칸 위치 안내가 잘 안 보여요.",
+    "review": "입구에 큰 안내 표지를 붙였습니다."
+  },
+  {
+    "id": "s78",
+    "daysAgo": 31,
+    "status": "done",
+    "reviewedDaysAgo": 24,
+    "kind": "info",
+    "toiletId": "a122",
+    "toiletName": "혜화역(4호선) 외부 · 3번 출구",
+    "area": "종로구",
+    "item": "청소·고장",
+    "current": "",
+    "actual": "시설 고장",
+    "checkedDate": -31,
+    "memo": "세면대 수도꼭지에서 물이 안 나와요.",
+    "review": "수도꼭지를 교체했습니다."
+  },
+  {
+    "id": "s79",
+    "daysAgo": 38,
+    "status": "done",
+    "reviewedDaysAgo": 30,
+    "kind": "info",
+    "toiletId": "a122",
+    "toiletName": "혜화역(4호선) 외부 · 3번 출구",
+    "area": "종로구",
+    "item": "청소·고장",
+    "current": "",
+    "actual": "청결 불량",
+    "checkedDate": -38,
+    "memo": "바닥이 늘 젖어 있어 미끄러워요.",
+    "review": "미끄럼 방지 매트를 깔고 배수구를 정비했습니다."
+  },
+  {
+    "id": "s80",
+    "daysAgo": 45,
+    "status": "done",
+    "reviewedDaysAgo": 40,
+    "kind": "comfort",
+    "toiletId": "a8",
+    "toiletName": "동대문역(1호선) 외부 · 4번 출구",
+    "area": "종로구",
+    "persona": "야간 귀가자·여성",
+    "ideas": [
+      "불법촬영 정기 점검"
+    ],
+    "text": "불법촬영 점검 여부를 알고 싶어요.",
+    "review": "월 1회 점검하고 결과를 입구에 게시합니다."
+  },
+  {
+    "id": "s81",
+    "daysAgo": 1,
+    "status": "pending",
+    "kind": "comfort",
+    "toiletId": "a84",
+    "toiletName": "종로3가역(3호선) 내부 · 7번 출구",
+    "area": "종로구",
+    "persona": "기타 이용자",
+    "ideas": [
+      "청소·위생용품 비치"
+    ],
+    "text": "오후에는 휴지가 거의 없어요."
+  },
+  {
+    "id": "s82",
+    "daysAgo": 19,
+    "status": "done",
+    "reviewedDaysAgo": 12,
+    "kind": "comfort",
+    "toiletId": "a82",
+    "toiletName": "안국역(3호선) 외부 · 4번 출구",
+    "area": "종로구",
+    "persona": "기타 이용자",
+    "ideas": [
+      "청소·위생용품 비치"
+    ],
+    "text": "휴지와 비누가 자주 떨어져 있어요.",
+    "review": "청소 주기를 하루 2회에서 4회로 늘렸습니다."
+  },
+  {
+    "id": "s83",
+    "daysAgo": 7,
+    "status": "pending",
+    "kind": "info",
+    "toiletId": "a46",
+    "toiletName": "서울대입구역(2호선) 외부 · 8번 출구",
+    "area": "관악구",
+    "item": "청소·고장",
+    "current": "",
+    "actual": "청결 불량",
+    "checkedDate": -7,
+    "memo": "악취가 심하고 휴지통이 넘쳐 있어요."
+  },
+  {
+    "id": "s84",
+    "daysAgo": 33,
+    "status": "done",
+    "reviewedDaysAgo": 28,
+    "kind": "comfort",
+    "toiletId": "a50",
+    "toiletName": "구로디지털단지역(2호선) 내부 · 1번 출구",
+    "area": "구로구",
+    "persona": "휠체어·보행보조",
+    "ideas": [
+      "손잡이 설치"
+    ],
+    "text": "장애인 칸 손잡이가 흔들려요.",
+    "review": "손잡이를 새로 고정했습니다."
+  },
+  {
+    "id": "s85",
+    "daysAgo": 40,
+    "status": "done",
+    "reviewedDaysAgo": 34,
+    "kind": "comfort",
+    "toiletId": "a55",
+    "toiletName": "영등포구청역(2호선) 내부 · 2번 출구",
+    "area": "영등포구",
+    "persona": "영유아 동반 보호자",
+    "ideas": [
+      "남자화장실에도 교환대"
+    ],
+    "text": "남자화장실에도 기저귀 교환대가 있으면 좋겠어요.",
+    "review": "남자화장실에 교환대를 설치했습니다."
+  },
+  {
+    "id": "s86",
+    "daysAgo": 47,
+    "status": "done",
+    "reviewedDaysAgo": 40,
+    "kind": "comfort",
+    "toiletId": "a177",
+    "toiletName": "천호역(5호선) 외부 · 5 또는6번 출구",
+    "area": "강동구",
+    "persona": "야간 귀가자·여성",
+    "ideas": [
+      "야간 조명 개선"
+    ],
+    "text": "입구 쪽 조명이 어두워요.",
+    "review": "입구 조명을 LED로 교체했습니다."
+  },
+  {
+    "id": "s87",
+    "daysAgo": 14,
+    "status": "done",
+    "reviewedDaysAgo": 6,
+    "kind": "comfort",
+    "toiletId": "a151",
+    "toiletName": "목동역(5호선) 외부 · 7번 출구",
+    "area": "양천구",
+    "persona": "휠체어·보행보조",
+    "ideas": [
+      "안내 표지 개선"
+    ],
+    "text": "장애인 칸 위치 안내가 잘 안 보여요.",
+    "review": "입구에 큰 안내 표지를 붙였습니다."
+  },
+  {
+    "id": "s88",
+    "daysAgo": 2,
+    "status": "pending",
+    "kind": "info",
+    "toiletId": "a118",
+    "toiletName": "미아사거리역(4호선) 외부 · 6번 출구",
+    "area": "강북구",
+    "item": "청소·고장",
+    "current": "",
+    "actual": "시설 고장",
+    "checkedDate": -2,
+    "memo": "변기 물이 안 내려가는 칸이 있어요."
+  },
+  {
+    "id": "s89",
+    "daysAgo": 28,
+    "status": "done",
+    "reviewedDaysAgo": 22,
+    "kind": "info",
+    "toiletId": "a27",
+    "toiletName": "성수역(2호선) 외부 · 2번 출구",
+    "area": "성동구",
+    "item": "청소·고장",
+    "current": "",
+    "actual": "시설 고장",
+    "checkedDate": -28,
+    "memo": "세면대 수도꼭지에서 물이 안 나와요.",
+    "review": "수도꼭지를 교체했습니다."
+  },
+  {
+    "id": "s90",
+    "daysAgo": 35,
+    "status": "done",
+    "reviewedDaysAgo": 28,
+    "kind": "info",
+    "toiletId": "a27",
+    "toiletName": "성수역(2호선) 외부 · 2번 출구",
+    "area": "성동구",
+    "item": "청소·고장",
+    "current": "",
+    "actual": "청결 불량",
+    "checkedDate": -35,
+    "memo": "바닥이 늘 젖어 있어 미끄러워요.",
+    "review": "미끄럼 방지 매트를 깔고 배수구를 정비했습니다."
+  },
+  {
+    "id": "s91",
+    "daysAgo": 42,
+    "status": "done",
+    "reviewedDaysAgo": 34,
+    "kind": "comfort",
+    "toiletId": "a221",
+    "toiletName": "이태원역(6호선) 외부 · 3번 출구",
+    "area": "용산구",
+    "persona": "야간 귀가자·여성",
+    "ideas": [
+      "불법촬영 정기 점검"
+    ],
+    "text": "불법촬영 점검 여부를 알고 싶어요.",
+    "review": "월 1회 점검하고 결과를 입구에 게시합니다."
+  },
+  {
+    "id": "s92",
+    "daysAgo": 4,
+    "status": "pending",
+    "kind": "comfort",
+    "toiletId": "a15",
+    "toiletName": "청량리역(1호선) 외부 · 4번 출구",
+    "area": "동대문구",
+    "persona": "휠체어·보행보조",
+    "ideas": [
+      "입구 턱 제거·경사로"
+    ],
+    "text": "입구 턱 때문에 휠체어로 들어가기 힘들어요."
+  },
+  {
+    "id": "s93",
+    "daysAgo": 16,
+    "status": "done",
+    "reviewedDaysAgo": 10,
+    "kind": "comfort",
+    "toiletId": "a53",
+    "toiletName": "신도림역(2호선) 외부 · 1번 출구",
+    "area": "구로구",
+    "persona": "기타 이용자",
+    "ideas": [
+      "청소·위생용품 비치"
+    ],
+    "text": "휴지와 비누가 자주 떨어져 있어요.",
+    "review": "청소 주기를 하루 2회에서 4회로 늘렸습니다."
+  },
+  {
+    "id": "s94",
+    "daysAgo": 23,
+    "status": "done",
+    "reviewedDaysAgo": 16,
+    "kind": "comfort",
+    "toiletId": "a217",
+    "toiletName": "공덕역(6호선) 외부 · 7번 출구",
+    "area": "마포구",
+    "persona": "휠체어·보행보조",
+    "ideas": [
+      "손잡이 설치"
+    ],
+    "text": "장애인 칸 손잡이가 흔들려요.",
+    "review": "손잡이를 새로 고정했습니다."
+  },
+  {
+    "id": "s95",
+    "daysAgo": 30,
+    "status": "done",
+    "reviewedDaysAgo": 22,
+    "kind": "comfort",
+    "toiletId": "a159",
+    "toiletName": "마포역(5호선) 외부 · 4번 출구",
+    "area": "마포구",
+    "persona": "영유아 동반 보호자",
+    "ideas": [
+      "남자화장실에도 교환대"
+    ],
+    "text": "남자화장실에도 기저귀 교환대가 있으면 좋겠어요.",
+    "review": "남자화장실에 교환대를 설치했습니다."
+  },
+  {
+    "id": "s96",
+    "daysAgo": 6,
+    "status": "pending",
+    "kind": "comfort",
+    "toiletId": "a149",
+    "toiletName": "까치산역(5호선) 외부 · 1 또는2 또는3 또는4번 출구",
+    "area": "강서구",
+    "persona": "임산부·노약자",
+    "ideas": [
+      "대기·휴식용 의자"
+    ],
+    "text": "줄이 길어서 오래 서 있어야 해요."
+  },
+  {
+    "id": "s97",
+    "daysAgo": 44,
+    "status": "done",
+    "reviewedDaysAgo": 38,
+    "kind": "comfort",
+    "toiletId": "a38",
+    "toiletName": "역삼역(2호선) 외부 · 3번 출구",
+    "area": "강남구",
+    "persona": "야간 귀가자·여성",
+    "ideas": [
+      "야간 조명 개선"
+    ],
+    "text": "입구 쪽 조명이 어두워요.",
+    "review": "입구 조명을 LED로 교체했습니다."
+  },
+  {
+    "id": "s98",
+    "daysAgo": 2,
+    "status": "pending",
+    "kind": "info",
+    "toiletId": "t002",
+    "toiletName": "시청B 지하상가",
+    "area": "중구",
+    "item": "비상벨",
+    "current": "있음",
+    "actual": "없음",
+    "checkedDate": -2,
+    "memo": "여자화장실 비상벨이 떼어져 있고 자리만 남아 있어요."
+  },
+  {
+    "id": "s99",
+    "daysAgo": 4,
+    "status": "pending",
+    "kind": "info",
+    "toiletId": "t093",
+    "toiletName": "시청A 지하상가",
+    "area": "중구",
+    "item": "기저귀 교환대",
+    "current": "있음",
+    "actual": "없음",
+    "checkedDate": -4,
+    "memo": "교환대가 철거돼서 지금은 없어요."
+  },
+  {
+    "id": "s100",
+    "daysAgo": 25,
+    "status": "done",
+    "reviewedDaysAgo": 18,
+    "kind": "info",
+    "toiletId": "t056",
+    "toiletName": "서울시청 본관 B1층 시민청 외부",
+    "area": "중구",
+    "item": "CCTV",
+    "current": "정보 없음",
+    "actual": "있음",
+    "checkedDate": -25,
+    "memo": "입구에 CCTV가 설치돼 있는데 정보에 없어요.",
+    "review": "현장 확인 후 CCTV 있음으로 정보를 고쳤습니다."
+  },
+  {
+    "id": "s101",
+    "daysAgo": 6,
+    "status": "pending",
+    "kind": "info",
+    "toiletId": "t152",
+    "toiletName": "서울시청 서소문청사 1층 로비",
+    "area": "중구",
+    "item": "CCTV",
+    "current": "정보 없음",
+    "actual": "있음",
+    "checkedDate": -6,
+    "memo": "로비 입구에 CCTV가 있어요."
+  },
+  {
+    "id": "s102",
+    "daysAgo": 30,
+    "status": "done",
+    "reviewedDaysAgo": 22,
+    "kind": "comfort",
+    "toiletId": "a16",
+    "toiletName": "시청역(2호선) 내부 · 10번 출구",
+    "area": "중구",
+    "persona": "야간 귀가자·여성",
+    "ideas": [
+      "비상벨 설치·작동 점검"
+    ],
+    "text": "비상벨이 눌리는지 확인이 필요해요.",
+    "review": "비상벨 전체 작동 점검을 마쳤습니다."
+  },
+  {
+    "id": "s103",
+    "daysAgo": 3,
+    "status": "pending",
+    "kind": "comfort",
+    "toiletId": "t155",
+    "toiletName": "다동소공원",
+    "area": "중구",
+    "persona": "야간 귀가자·여성",
+    "ideas": [
+      "비상벨 설치·작동 점검"
+    ],
+    "text": "비상벨을 눌러도 아무 반응이 없어요."
+  },
+  {
+    "id": "s104",
+    "daysAgo": 28,
+    "status": "done",
+    "reviewedDaysAgo": 20,
+    "kind": "comfort",
+    "toiletId": "t053",
+    "toiletName": "소공동주민센터",
+    "area": "중구",
+    "persona": "영유아 동반 보호자",
+    "ideas": [
+      "기저귀 교환대 설치"
+    ],
+    "text": "교환대가 낡아서 흔들려요.",
+    "review": "새 교환대로 교체했습니다."
+  },
+  {
+    "id": "s105",
+    "daysAgo": 5,
+    "status": "pending",
+    "kind": "info",
+    "toiletId": "a2",
+    "toiletName": "시청역(1호선) 외부 · 5번 출구",
+    "area": "중구",
+    "item": "장애인화장실",
+    "current": "있음",
+    "actual": "없음",
+    "checkedDate": -5,
+    "memo": "장애인 칸이 창고로 쓰이고 있어서 이용할 수 없어요."
+  },
+  {
+    "id": "s106",
+    "daysAgo": 35,
+    "status": "done",
+    "reviewedDaysAgo": 27,
+    "kind": "comfort",
+    "toiletId": "t028",
+    "toiletName": "소공지하상가B",
+    "area": "중구",
+    "persona": "휠체어·보행보조",
+    "ideas": [
+      "자동·미닫이 출입문"
+    ],
+    "text": "장애인 칸 문이 무거워 혼자 열기 힘들어요.",
+    "review": "자동문으로 교체했습니다."
+  },
+  {
+    "id": "s107",
+    "daysAgo": 7,
+    "status": "pending",
+    "kind": "comfort",
+    "toiletId": "a18",
+    "toiletName": "을지로입구역(2호선) 외부 · 4번 출구",
+    "area": "중구",
+    "persona": "영유아 동반 보호자",
+    "ideas": [
+      "남자화장실에도 교환대"
+    ],
+    "text": "남자화장실에는 교환대가 없어요."
+  }
+]

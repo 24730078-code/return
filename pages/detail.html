@@ -5,41 +5,57 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>공공화장실 큐레이터 · 상세</title>
 <link rel="stylesheet" href="../css/style.css">
+<style>
+  /* ---------- 맨 위: 사진 (예전 지도 자리, 크기 그대로) ----------
+     화면 가로에 딱 붙게, 양옆 화살표로 넘김. 휴대폰에서는 손가락으로 밀어도 넘어감 */
+  .photo-hero { position: absolute; inset: 0; overflow: hidden; background: #EEF0F1; touch-action: pan-y; }
+  .photo-track { display: flex; height: 100%; transition: transform 0.3s ease; will-change: transform; }
+  .photo-track img {
+    flex: 0 0 100%; width: 100%; height: 100%; object-fit: cover; display: block;
+    user-select: none; -webkit-user-drag: none; pointer-events: none;
+  }
+  .photo-arrow {
+    position: absolute; top: 50%; transform: translateY(-50%); z-index: 3;
+    width: 34px; height: 34px; border: 0; border-radius: 50%; padding: 0;
+    background: rgba(255, 255, 255, 0.9); box-shadow: 0 2px 8px rgba(27, 36, 34, 0.22);
+    display: flex; align-items: center; justify-content: center; color: var(--pp-ink, #1F2A2E);
+  }
+  .photo-arrow svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+  .photo-arrow.prev { left: 12px; }
+  .photo-arrow.next { right: 12px; }
+  .photo-dots { position: absolute; left: 0; right: 0; bottom: 10px; z-index: 3; display: flex; justify-content: center; gap: 5px; pointer-events: none; }
+  .photo-dots i { width: 6px; height: 6px; border-radius: 50%; background: rgba(255, 255, 255, 0.55); box-shadow: 0 0 2px rgba(0, 0, 0, 0.25); }
+  .photo-dots i.on { background: #fff; }
+
+  /* ---------- 위치 및 상세 정보 아래: 지도 (지도 / 로드뷰) ---------- */
+  .map-box { position: relative; height: 200px; border-radius: 14px; overflow: hidden; box-shadow: 0 1px 4px rgba(20, 30, 40, 0.08); }
+  .map-box .map-view { position: absolute; inset: 0; margin: 0; height: 100%; border-radius: 0; }
+</style>
 </head>
 <body>
-<div class="app">
+<div class="app detail-app">
 
   <header class="app-header">
-    <div class="brand-row">Restie</div>
     <div class="header-row">
       <button class="back-btn" type="button" onclick="history.length>1?history.back():location.href='./list.html'" aria-label="뒤로가기">←</button>
       <span class="header-title" id="h-title">불러오는 중…</span>
+      <button class="fav-toggle" type="button" id="fav-star" aria-label="즐겨찾기에 저장" aria-pressed="false" hidden>☆</button>
     </div>
   </header>
 
   <main class="content no-tabbar" id="content">
-    <div class="hero-wrap">
-      <div class="hero-img thumb" id="hero">이미지</div>
-      <div class="hero-rv" id="hero-rv" hidden></div>
-      <div class="hero-tabs" id="hero-tabs" hidden>
-        <button type="button" class="on" data-m="map">지도</button>
-        <button type="button" data-m="rv">로드뷰</button>
-      </div>
-      <div class="hero-msg" id="hero-msg" hidden>이 위치 근처에는 로드뷰가 없어요</div>
-    </div>
-
-    <div class="toast" id="toast" hidden>
-      <span>즐겨찾기에 저장했습니다</span>
-      <button type="button" onclick="location.href='./mypage.html?tab=favorites'">마이에서 보기</button>
+    <!-- 맨 위: 사진 (사진 데이터가 없으면 '이미지' 자리표시) -->
+    <div class="hero-wrap" id="photo-wrap" aria-roledescription="사진 넘기기">
+      <div class="hero-img thumb" id="photo-empty">이미지</div>
     </div>
 
     <section>
-      <div class="section-title">판단 정보 · 방문 전 꼭 확인</div>
+      <div class="section-title">시설 및 이용 안내</div>
       <div class="spec-grid" id="spec-grid" style="margin-top:10px"></div>
     </section>
 
     <section>
-      <div class="section-title" style="margin-bottom:6px">보조 정보</div>
+      <div class="section-title" style="margin-bottom:6px">위치 및 상세 정보</div>
       <div class="info-row"><span class="label">주소</span><span id="v-address">-</span></div>
       <div id="info-extra"></div>
       <div class="info-row"><span class="label">변기 수</span><span id="v-count" class="gi-row">-</span></div>
@@ -47,19 +63,24 @@
       <div class="info-row"><span class="label">정보 갱신일</span><span id="v-updated">-</span></div>
     </section>
 
-    <section class="report-row">
-      <span>청소도구 적치·고장을 발견했나요?</span>
-      <a class="text-btn" id="report-link" href="./propose.html?mode=info&amp;item=broken">제보</a>
+    <!-- 지도 (예전 사진 자리) -->
+    <section id="map-sec" hidden>
+      <div class="map-box">
+        <div class="hero-img thumb map-view" id="hero">지도</div>
+        <div class="hero-rv" id="hero-rv" hidden></div>
+        <div class="hero-tabs" id="hero-tabs" hidden>
+          <button type="button" class="on" data-m="map">지도</button>
+          <button type="button" data-m="rv">로드뷰</button>
+        </div>
+        <div class="hero-msg" id="hero-msg" hidden>이 위치 근처에는 로드뷰가 없어요</div>
+      </div>
     </section>
+
     <section class="report-row">
       <span>이용하기 불편했거나 정보가 실제와 다른가요?</span>
       <a class="text-btn" id="propose-link" href="./propose.html">개선 제안</a>
     </section>
   </main>
-
-  <div class="save-bar">
-    <button class="save-btn" type="button" id="save-btn">☆ 즐겨찾기에 저장</button>
-  </div>
 </div>
 
 <script src="../js/config.js"></script>
@@ -71,7 +92,7 @@
   const content = document.getElementById("content");
 
   try {
-    const toilets = await App.loadToilets();
+    const [toilets] = await Promise.all([App.loadToilets(), App.loadImageRules()]);
     const t = toilets.find((x) => x.id === id);
     if (!t) throw new Error("not found");
 
@@ -91,7 +112,6 @@
     document.getElementById("v-address").textContent = t.address;
     // 개선 제안 페이지로 이 화장실을 미리 선택한 채 이동
     const pid = encodeURIComponent(t.id);
-    document.getElementById("report-link").href = `./propose.html?id=${pid}&mode=info&item=broken`;
     document.getElementById("propose-link").href = `./propose.html?id=${pid}`;
     if (t.source === "api") {  // 서울시 API(지하철 역사) 전용 정보
       const row = (l, v) => (v ? `<div class="info-row"><span class="label">${l}</span><span>${v}</span></div>` : "");
@@ -107,7 +127,13 @@
       : `${App.MALE_ICON}<b>${t.maleChild}</b><span class="gi-dot">·</span>${App.FEMALE_ICON}<b>${t.femaleChild}</b>`;
     document.getElementById("v-updated").textContent = (t.updatedAt || "").slice(0, 10) || "정보 없음";
 
-    // 위치: 카카오맵을 크게 확대해서 핀을 보여 준다 (키가 없거나 실패하면 기존 자리표시 유지)
+    // 맨 위 사진 (예전 지도 자리)
+    renderPhotos(App.imagesOf(t));
+
+    // 지도 영역: 위쪽 영역들 크기는 그대로 두고 아래에 붙인다 (화면이 길어지면 스크롤)
+    keepTopLayout(document.getElementById("map-sec"));
+
+    // 지도: 카카오맵을 크게 확대해서 핀을 보여 준다 (키가 없거나 실패하면 '지도' 자리표시 유지)
     if (KakaoMap.hasKey()) {
       const hero = document.getElementById("hero");
       const placeholder = hero.textContent;
@@ -118,13 +144,13 @@
         initHeroTabs(t);
       }).catch(() => fallbackHero(hero, placeholder));
     }
-    // 지도 ↔ 로드뷰 전환 (우리 화면 안에서 카카오 로드뷰를 띄움)
     // 지도 영역을 누르면 메인 지도로 이동 (같은 화장실이 가운데에 오도록)
     document.getElementById("hero").addEventListener("click", () => {
       location.href = `../index.html?focus=${encodeURIComponent(t.id)}`;
     });
     document.getElementById("hero").style.cursor = "pointer";
 
+    // 지도 ↔ 로드뷰 전환 (우리 화면 안에서 카카오 로드뷰를 띄움)
     function initHeroTabs(t) {
       const tabs = document.getElementById("hero-tabs");
       const mapEl = document.getElementById("hero");
@@ -151,20 +177,20 @@
     }
     function fallbackHero(hero, text) { hero.innerHTML = ""; hero.classList.add("thumb"); hero.textContent = text; }
 
-    const saveBtn = document.getElementById("save-btn");
-    function syncSaveBtn() {
+    // 즐겨찾기: 헤더 오른쪽 별을 눌러 저장/해제 (안내 문구 없이 별 모양만 바뀜)
+    const star = document.getElementById("fav-star");
+    function syncStar() {
       const fav = App.isFavorite(t.id);
-      saveBtn.classList.toggle("active", fav);
-      saveBtn.textContent = fav ? "★ 저장됨" : "☆ 즐겨찾기에 저장";
+      star.classList.toggle("active", fav);
+      star.textContent = fav ? "★" : "☆";
+      star.setAttribute("aria-pressed", fav ? "true" : "false");
+      star.setAttribute("aria-label", fav ? "즐겨찾기에서 제거" : "즐겨찾기에 저장");
     }
-    syncSaveBtn();
-    saveBtn.addEventListener("click", () => {
-      const active = App.toggleFavorite(t.id);
-      syncSaveBtn();
-      const toast = document.getElementById("toast");
-      toast.hidden = !active;
-      toast.querySelector("span").textContent = active ? "즐겨찾기에 저장했습니다" : "즐겨찾기에서 제거했습니다";
-      if (active) setTimeout(() => (toast.hidden = true), 2500);
+    syncStar();
+    star.hidden = false;
+    star.addEventListener("click", () => {
+      App.toggleFavorite(t.id);
+      syncStar();
     });
 
     App.addRecent(t.id);
@@ -178,6 +204,66 @@
       </div>`;
     document.getElementById("h-title").textContent = "오류";
     console.error(err);
+  }
+
+  /* ---------- 맨 위 사진: 가로에 딱 붙게, 화살표로 넘기기 ---------- */
+  function renderPhotos(photos) {
+    if (!photos.length) return;                       // 사진이 없으면 '이미지' 자리표시 그대로
+    const wrap = document.getElementById("photo-wrap");
+    const arrow = (dir) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${dir === "prev" ? "M15 5l-7 7 7 7" : "M9 5l7 7-7 7"}"/></svg>`;
+    const many = photos.length > 1;
+    wrap.innerHTML = `
+      <div class="photo-hero">
+        <div class="photo-track" id="photo-track">
+          ${photos.map((p) => `<img src="${App.esc(p.src)}" alt="${App.esc(p.alt)}" draggable="false">`).join("")}
+        </div>
+      </div>
+      ${many ? `
+        <button type="button" class="photo-arrow prev" id="photo-prev" aria-label="이전 사진">${arrow("prev")}</button>
+        <button type="button" class="photo-arrow next" id="photo-next" aria-label="다음 사진">${arrow("next")}</button>
+        <div class="photo-dots" id="photo-dots">${photos.map(() => "<i></i>").join("")}</div>` : ""}`;
+    if (!many) return;
+
+    const track = document.getElementById("photo-track");
+    const dots = [...document.querySelectorAll("#photo-dots i")];
+    let cur = 0;
+    function go(i) {
+      cur = (i + photos.length) % photos.length;        // 마지막에서 다음 → 처음으로
+      track.style.transform = `translateX(${-cur * 100}%)`;
+      dots.forEach((d, k) => d.classList.toggle("on", k === cur));
+      wrap.setAttribute("aria-label", `${photos[cur].alt} (${cur + 1}/${photos.length})`);
+    }
+    document.getElementById("photo-prev").addEventListener("click", () => go(cur - 1));
+    document.getElementById("photo-next").addEventListener("click", () => go(cur + 1));
+    // 휴대폰: 손가락으로 좌우로 밀면 넘어감
+    let sx = null, sy = 0;
+    wrap.addEventListener("touchstart", (e) => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+    wrap.addEventListener("touchend", (e) => {
+      if (sx == null) return;
+      const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+      sx = null;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) go(cur + (dx < 0 ? 1 : -1));
+    });
+    go(0);
+  }
+
+  /* ---------- 위쪽 영역 크기 유지 ----------
+     맨 위 영역(사진)은 원래 화면 높이에 맞춰 크기가 정해진다. 아래에 지도 영역을 붙이면 그만큼 줄어들기 때문에,
+     지도 영역이 없을 때의 높이를 재서 고정한 뒤 지도 영역을 보여 준다. 늘어난 만큼은 아래로 스크롤된다. */
+  function keepTopLayout(sec) {
+    const top = document.getElementById("photo-wrap");
+    function apply() {
+      sec.hidden = true;
+      top.style.flex = "";
+      top.style.height = "";
+      const h = top.getBoundingClientRect().height;
+      top.style.flex = "0 0 auto";
+      top.style.height = `${h}px`;
+      sec.hidden = false;
+    }
+    apply();
+    let timer = null;
+    window.addEventListener("resize", () => { clearTimeout(timer); timer = setTimeout(apply, 150); });
   }
 })();
 </script>

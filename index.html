@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>공공화장실 큐레이터 · 홈</title>
 <link rel="stylesheet" href="./css/style.css">
+<style>
+  /* 목록이 올라와 있을 때 지도에서 고른 화장실: 목록 맨 위에 따로 보여 주고, 기본 목록과는 선으로 구분 */
+  .sheet-picked { display: flex; flex-direction: column; gap: 10px; }
+  .sheet-divider { border: 0; border-top: 1px solid rgba(31, 42, 46, 0.14); margin: 2px 0; width: 100%; flex: 0 0 auto; }
+</style>
 </head>
 <body>
 <div class="app home-app">
@@ -15,7 +20,7 @@
       <div class="search-row">
         <form role="search" class="floating-search" action="javascript:void(0)" id="search-form">
           <label for="home-search" class="sr-only">지역·화장실명 검색</label>
-          <span aria-hidden="true">🔍</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" style="flex:0 0 auto"><circle cx="11" cy="11" r="7.5"/><path d="M16.5 16.5 20 20"/></svg>
           <input id="home-search" type="search" placeholder="지역 또는 화장실명 검색">
         </form>
       </div>
@@ -33,8 +38,8 @@
     <p class="note" id="map-note">지도를 불러오는 중…</p>
 
     <div class="pin-legend">
-      <span><i style="background:var(--primary)"></i>J 공공데이터</span>
-      <span id="legend-a"><i style="background:#C98A2C"></i>A 서울시 API</span>
+      <span><i style="background:#22B75E"></i>J 공공데이터</span>
+      <span id="legend-a"><i style="background:#FFB400"></i>A 서울시 API</span>
     </div>
 
     <div class="pin-card" id="pin-card" hidden></div>
@@ -48,15 +53,19 @@
       <p class="rv-empty" id="rv-empty" hidden>이 위치 근처에는 로드뷰가 없어요</p>
     </div>
 
-    <button class="locate-fab" type="button" id="locate-btn" aria-label="현재 위치로 이동">⌖</button>
+    <button class="locate-fab" type="button" id="locate-btn" aria-label="현재 위치로 이동">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="6.3" stroke-width="2.2"/><path d="M12 2.6v3.2M12 18.2v3.2M2.6 12h3.2M18.2 12h3.2" stroke-width="1.8"/></svg>
+    </button>
     <button class="list-fab" type="button" id="list-fab">목록으로 보기</button>
 
     <!-- 바텀시트: 닫힘 → 절반 → 전체 -->
     <section class="list-sheet" id="list-sheet" aria-label="화장실 목록" inert>
       <button class="sheet-grab" type="button" id="sheet-grab" aria-label="목록 높이 조절"><i></i></button>
       <div class="sheet-head">
-        <span id="sheet-title">주변 화장실</span>
-        <span class="sub">거리순</span>
+        <div class="sort-tabs" id="sort-tabs" aria-label="정렬 기준">
+          <button class="sort-opt active" type="button" data-sort="distance" aria-pressed="true">거리순</button>
+          <button class="sort-opt" type="button" data-sort="recommend" aria-pressed="false">추천순</button>
+        </div>
       </div>
       <div class="chip-scroll sheet-chips" id="sheet-chip-row"></div>
       <div class="sheet-list" id="sheet-list"></div>
@@ -85,6 +94,7 @@
   const activeKeys = new Set(); // 중복 선택된 조건 (비어 있으면 전체)
   let allToilets = [];
   let loadFailed = false;
+  let sortMode = "distance";    // "distance"(거리순) | "recommend"(추천순)
 
   /* ---------- 칩 필터 (지도 위 / 목록 시트 위 두 줄을 동기화) ---------- */
   const chipRow = document.getElementById("type-chip-row");
@@ -111,28 +121,141 @@
     });
   });
 
+  /* ---------- 정렬 (거리순 / 추천순) ---------- */
+  const sortTabs = document.getElementById("sort-tabs");
+  sortTabs.addEventListener("click", (e) => {
+    const btn = e.target.closest(".sort-opt");
+    if (!btn || btn.dataset.sort === sortMode) return;
+    sortMode = btn.dataset.sort;
+    sortTabs.querySelectorAll(".sort-opt").forEach((b) => {
+      const on = b.dataset.sort === sortMode;
+      b.classList.toggle("active", on);
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+    listEl.scrollTop = 0;
+    renderList();
+  });
+
+  /* 시설 배지 (턱없음·비상벨·CCTV·기저귀교환대·24시간) — 표시용. 추천 점수에는 쓰지 않음 */
+  const recommendTags = (t) => [...App.badgesOf(t), ...(App.isOpenNow(t) ? ["24시간"] : [])];
+
+  /* ---------- 개선 제안 · 개선 보드 반영 ----------
+     개선 제안은 개선 보드에도 그대로 올라가는 데이터(App.Proposals)라서, 여기서 한 번에 읽어 씁니다.
+
+     ① 반영 완료된 '정보 수정' 제안은 실제 화장실 정보로 보고 시설 정보를 고칩니다.
+        (예: 'CCTV 없음 → 있음'이 반영 완료되면 CCTV 버튼을 눌렀을 때 목록에 나옴. 거리순·추천순 공통)
+        시설을 새로 설치해 달라는 '불편 개선' 제안이 반영 완료돼도 그 시설이 생긴 것으로 봅니다.
+     ② 추천순 점수
+        1순위 (버튼 관련): 누른 조건 버튼의 시설에 대한 제안만 계산
+             반영 완료 +1 · 검토 대기 −1 · 그 시설이 '실제로는 없다'는 검토 대기 제보 −2
+             → '전체'일 때는 모두 0이라 2순위로 정해짐
+        2순위 (개선 제안·개선 보드): 그 화장실의 모든 제안
+             반영 완료 +1 (불편이 실제로 고쳐진 곳) · 검토 대기 −1 (아직 해결 안 된 불편) · 반려 0
+        3순위: 가까운 순 */
+  const FAC_KEYS = ["hasStepFree", "hasBell", "hasCctv", "hasDiaperTable"];
+  const FAC_OF_INFO = { "장애인화장실": "hasStepFree", "기저귀 교환대": "hasDiaperTable", "비상벨": "hasBell", "CCTV": "hasCctv" };
+  const FAC_OF_IDEA = {
+    "입구 턱 제거·경사로": "hasStepFree", "자동·미닫이 출입문": "hasStepFree", "손잡이 설치": "hasStepFree",
+    "기저귀 교환대 설치": "hasDiaperTable", "남자화장실에도 교환대": "hasDiaperTable",
+    "비상벨 설치·작동 점검": "hasBell", "입구 CCTV 설치": "hasCctv",
+  };
+  const INSTALL_IDEA = { "기저귀 교환대 설치": "hasDiaperTable", "비상벨 설치·작동 점검": "hasBell", "입구 CCTV 설치": "hasCctv" };
+  /* 제안이 어떤 시설에 대한 것인지 */
+  function facilitiesOf(p) {
+    const set = new Set();
+    if (p.facility) set.add(p.facility);                               // 샘플 데이터에 직접 적어 둔 경우
+    if (p.kind === "info" && FAC_OF_INFO[p.item]) set.add(FAC_OF_INFO[p.item]);
+    (p.ideas || []).forEach((i) => FAC_OF_IDEA[i] && set.add(FAC_OF_IDEA[i]));
+    return set;
+  }
+  const saysNone = (p) => String(p.actual || "").startsWith("없음");
+  const saysYes = (p) => String(p.actual || "").startsWith("있음");
+
+  const POINT = { done: 1, pending: -1, rejected: 0 };
+  let propsByToilet = new Map();   // 화장실 id → 제안 목록
+  function syncProposals() {
+    propsByToilet = new Map();
+    App.Proposals.list().forEach((p) => {
+      if (!p.toiletId) return;
+      if (!propsByToilet.has(p.toiletId)) propsByToilet.set(p.toiletId, []);
+      propsByToilet.get(p.toiletId).push(p);
+    });
+    // ① 반영 완료된 정보 수정을 시설 정보에 적용 (원래 공공데이터 값은 _orig에 보관해 두고 매번 다시 계산)
+    allToilets.forEach((t) => {
+      if (!t._orig) t._orig = Object.fromEntries(FAC_KEYS.map((k) => [k, t[k]]));
+      FAC_KEYS.forEach((k) => (t[k] = t._orig[k]));
+      (propsByToilet.get(t.id) || [])
+        .filter((p) => p.status === "done")
+        .sort((a, b) => a.createdAt - b.createdAt)                     // 나중에 반영된 제안이 우선
+        .forEach((p) => {
+          const k = p.kind === "info" ? FAC_OF_INFO[p.item] : null;
+          if (k && saysYes(p)) t[k] = true;
+          if (k && saysNone(p)) t[k] = false;
+          (p.ideas || []).forEach((i) => INSTALL_IDEA[i] && (t[INSTALL_IDEA[i]] = true));
+        });
+    });
+  }
+  /* 1순위: 누른 조건 버튼의 시설에 대한 제안 점수 */
+  function buttonScore(t) {
+    if (!activeKeys.size) return 0;
+    return (propsByToilet.get(t.id) || []).reduce((n, p) => {
+      const facs = facilitiesOf(p);
+      if (![...activeKeys].some((k) => facs.has(k))) return n;
+      if (p.status === "pending" && p.kind === "info" && saysNone(p)) return n - 2;
+      return n + (POINT[p.status] || 0);
+    }, 0);
+  }
+  /* 2순위: 개선 제안·개선 보드 점수 (그 화장실의 모든 제안) */
+  const boardScore = (t) => (propsByToilet.get(t.id) || []).reduce((n, p) => n + (POINT[p.status] || 0), 0);
+  const byDistance = (a, b) => (a.distanceM ?? 1e9) - (b.distanceM ?? 1e9);
+  const byRecommend = (a, b) =>
+    buttonScore(b) - buttonScore(a) || boardScore(b) - boardScore(a) || byDistance(a, b);
+
   /* ---------- 목록 + 핀 (J 공공데이터 JSON + A 서울시 지하철 API) ---------- */
   const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const allItems = () => allToilets;
 
   function filtered() {
     const q = searchInput.value.trim().toLowerCase();
+    syncProposals();   // 다른 화면에서 제안을 쓰거나 검토 상태를 바꾸고 돌아와도 최신으로 반영
     return allItems()
       .filter((t) => {
         const mq = !q || t.name.toLowerCase().includes(q) || (t.area || "").toLowerCase().includes(q) || (t.address || "").toLowerCase().includes(q);
         return mq && [...activeKeys].every((k) => t[k]);
       })
-      .sort((a, b) => (a.distanceM ?? 1e9) - (b.distanceM ?? 1e9));
+      .sort(sortMode === "recommend" ? byRecommend : byDistance);
   }
 
+  /* 시설 배지: 화장실에 실제로 있는 정보(턱없음·비상벨·CCTV·기저귀교환대·24시간)를 전부 표시.
+     정렬 기준과 상관없이 같은 화장실은 항상 같은 배지가 나온다 (목록·핀 카드 공통) */
   function badgesHtml(t) {
-    return App.badgesOf(t).slice(0, 3).map((b) => `<span class="badge ok">${b}</span>`).join("");
+    const tags = recommendTags(t);
+    return tags.length
+      ? tags.map((b) => `<span class="badge ok">${b}</span>`).join("")
+      : `<span class="badge">등록된 편의시설 없음</span>`;
+  }
+
+  /* 카드 둘째 줄: 정렬 기준과 상관없이 지역 · 거리 · 도보 N분 (순서만 정렬에 따라 달라짐) */
+  const fmtDist = (m) => (m < 1000 ? `${m}m` : `${(m / 1000).toFixed(1)}km`);
+  function cardInfo(t) {
+    const area = t.area || "";
+    const line = t.distanceM == null
+      ? `${area} · 거리 확인 중`
+      : `${area} · ${fmtDist(t.distanceM)} · 도보 ${Math.max(1, Math.round(t.distanceM / 70))}분`;
+    return { line, badges: badgesHtml(t) };
+  }
+
+  /* 목록 카드 썸네일: 그 화장실의 첫 번째 사진 (사진 데이터가 없으면 기존 '이미지' 자리표시) */
+  function thumbHtml(t) {
+    const img = App.imagesOf(t)[0];
+    return img
+      ? `<div class="thumb"><img src="${esc(img.src)}" alt="${esc(img.alt)}" loading="lazy" draggable="false"></div>`
+      : `<div class="thumb">이미지</div>`;
   }
 
   function renderList() {
     const list = filtered();
     KakaoMap.showMarkers(list);
-    document.getElementById("sheet-title").textContent = `주변 화장실 ${list.length}곳`;
     if (loadFailed) {
       listEl.innerHTML = `
         <div class="state-block">
@@ -151,22 +274,29 @@
         </div>`;
       return;
     }
-    listEl.innerHTML = list.map((t) => {
-      const href = `href="pages/detail.html?id=${t.id}"`;
-      const fav = App.isFavorite(t.id);
-      return `
+    // 목록이 올라와 있을 때 지도에서 고른 화장실이 있으면 맨 위에 따로 보여 주고 선으로 구분
+    if (picked && !list.some((t) => t.id === picked.id)) picked = null;   // 조건·검색으로 빠진 곳이면 해제
+    const pickedHtml = picked && state !== "closed"
+      ? `<div class="sheet-picked">${cardHtml(picked)}</div><hr class="sheet-divider">`
+      : "";
+    listEl.innerHTML = pickedHtml + list.map(cardHtml).join("");
+  }
+  function cardHtml(t) {
+    const href = `href="pages/detail.html?id=${t.id}"`;
+    const fav = App.isFavorite(t.id);
+    const info = cardInfo(t);
+    return `
         <div class="toilet-card" style="align-items:center">
           <a ${href} draggable="false" style="display:flex;gap:12px;flex:1;min-width:0">
-            <div class="thumb">이미지</div>
+            ${thumbHtml(t)}
             <div class="card-body">
               <span class="card-name">${esc(t.name)}${App.srcTag(t)}</span>
-              <span class="card-dist">${esc(App.distLabel(t))}</span>
-              <div class="badge-row">${badgesHtml(t)}</div>
+              <span class="card-dist">${esc(info.line)}</span>
+              <div class="badge-row">${info.badges}</div>
             </div>
           </a>
           <button class="fav-toggle${fav ? " active" : ""}" type="button" data-id="${t.id}" aria-label="즐겨찾기 토글">${fav ? "★" : "☆"}</button>
         </div>`;
-    }).join("");
   }
   let renderTimer = null;
   const scheduleRender = () => { clearTimeout(renderTimer); renderTimer = setTimeout(renderList, 150); };
@@ -181,12 +311,34 @@
         <span class="card-dist">${esc(App.distLabel(t))}</span>
         <div class="badge-row">${badgesHtml(t)}</div>
       </a>
-      <button class="pin-card-rv" type="button" id="pin-rv-btn">로드뷰</button>
-      <span class="pin-card-go">상세 ›</span>`;
+      <button class="pin-card-rv" type="button" id="pin-rv-btn">로드뷰</button>`;
     pinCard.hidden = false;
     selected = t;
   }
   const hidePinCard = () => { pinCard.hidden = true; };
+  /* 지도 핀을 눌렀을 때
+     - 이미 커져 있던 핀을 한 번 더 누르면: 그 화장실 상세 화면으로
+     - 목록이 올라와 있으면: 핀이 커지고, 그 화장실이 목록 맨 위에 따로 올라옴 (누르면 상세 화면)
+     - 목록이 닫혀 있으면: 핀이 커지고 아래에 화장실 카드가 뜸 */
+  let picked = null;   // 목록이 올라와 있을 때 지도에서 고른 화장실
+  function onPinClick(t, wasSelected) {
+    if (wasSelected) {
+      location.href = `pages/detail.html?id=${encodeURIComponent(t.id)}`;
+      return;
+    }
+    if (state !== "closed") {
+      picked = t;
+      renderList();
+      listEl.scrollTop = 0;
+      return;
+    }
+    showPinCard(t);
+  }
+  /* 지도 빈 곳을 누르면 선택 해제 */
+  function onMapClick() {
+    hidePinCard();
+    if (picked) { picked = null; renderList(); }
+  }
 
   /* ---------- 로드뷰 (카카오맵으로 나가지 않고 이 화면 위에서 보기) ---------- */
   let selected = null;
@@ -209,8 +361,11 @@
     const btn = e.target.closest(".fav-toggle");
     if (!btn) return;
     const on = App.toggleFavorite(btn.dataset.id);
-    btn.classList.toggle("active", on);
-    btn.textContent = on ? "★" : "☆";
+    // 같은 화장실이 '고른 화장실'과 기본 목록에 함께 있을 수 있어서 둘 다 바꿈
+    listEl.querySelectorAll(`.fav-toggle[data-id="${btn.dataset.id}"]`).forEach((b) => {
+      b.classList.toggle("active", on);
+      b.textContent = on ? "★" : "☆";
+    });
   });
 
   searchInput.addEventListener("input", renderList);
@@ -224,15 +379,27 @@
   const posFor = (s) => (s === "full" ? 0 : s === "half" ? Math.round(H * HALF_RATIO) : H);
 
   function setState(s) {
+    const changed = s !== state;
     state = s;
     H = mapArea.clientHeight;
     y = posFor(s);
     sheet.style.transition = "";
     sheet.style.transform = `translateY(${y}px)`;
     mapArea.dataset.sheet = s;
+    mapArea.classList.toggle("sheet-rising", s !== "closed");   // 조건 버튼: 목록이 열리면 지도 위 → 목록 안으로
     sheet.classList.toggle("is-full", s === "full");
     sheet.inert = s === "closed";
     if (s !== "full") listEl.scrollTop = 0;
+    if (changed) {
+      if (s === "closed") picked = null;                                          // 목록을 내리면 고른 화장실 해제
+      else if (!picked && selected && !pinCard.hidden) picked = selected;         // 핀 카드가 떠 있던 화장실은 목록 맨 위로
+      if (allToilets.length) renderList();
+    }
+    // 목록을 올리거나(절반) 내릴 때: 내 위치가 '지금 보이는 지도 영역'의 가운데에 오도록 다시 맞춤
+    // (절반이면 시트 위쪽 남은 영역, 닫히면 지도 전체. 전체 화면일 때는 지도가 안 보이므로 그대로)
+    if (changed && s !== "full") {
+      KakaoMap.centerInView(App.GEO.getOrigin(), s === "half" ? y : H);
+    }
   }
 
   window.addEventListener("resize", () => setState(state));
@@ -278,6 +445,7 @@
     drag.lastT = e.timeStamp;
     y = Math.min(H, Math.max(0, drag.startPos + dy));
     sheet.style.transform = `translateY(${y}px)`;
+    mapArea.classList.toggle("sheet-rising", y < H - 80);       // 끌어내리는 중에도 바닥 근처면 지도 위 버튼으로 전환
   });
 
   function endDrag(e) {
@@ -313,7 +481,9 @@
   /* ---------- 데이터 + 카카오맵 ---------- */
   const noteEl = document.getElementById("map-note");
   try {
-    allToilets = await App.loadToilets();
+    // 화장실 데이터와 샘플 개선 제안(추천순 계산에 사용)을 함께 불러옴
+    const [toilets] = await Promise.all([App.loadToilets(), App.Proposals.ready(), App.loadImageRules()]);
+    allToilets = toilets;
     document.getElementById("legend-a").lastChild.textContent =
       App.dataStatus.via === "api" ? "A 서울시 API" : App.dataStatus.via === "json" ? "A 대체 JSON" : "A (불러오기 실패)";
     renderList();
@@ -331,8 +501,8 @@
       await KakaoMap.init({
         el: document.getElementById("kakao-map"),
         center: App.GEO.getOrigin(),
-        onSelect: showPinCard,
-        onMapClick: hidePinCard,
+        onSelect: onPinClick,
+        onMapClick: onMapClick,
       });
       noteEl.hidden = true;
       renderList();
@@ -345,6 +515,12 @@
         if (t && KakaoMap.focusOn(t, 3)) { focused = true; showPinCard(t); }
       };
       tryFocus();
+      // 처음 들어오면 현재 위치를 한 번 확인해 지도에 표시 (권한 거부 등 실패 시 조용히 넘어감)
+      App.GEO.locate().then((pos) => {
+        App.GEO.applyDistances(allToilets);
+        KakaoMap.setMyPos(pos, { center: !focusId }); // 상세에서 넘어온 경우엔 그 화장실 위치 유지
+        scheduleRender();
+      }).catch(() => {});
       // 좌표가 없는 J 항목을 주소로 변환 → 변환되는 대로 핀/거리 갱신 (A 항목은 좌표가 이미 있음)
       KakaoMap.geocodeAll(allToilets, () => {
         App.GEO.applyDistances(allToilets);

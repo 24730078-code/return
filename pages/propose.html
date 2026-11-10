@@ -7,13 +7,10 @@
 <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
-<div class="app">
+<div class="app propose-app">
 
-  <header class="app-header">
-    <div class="brand-row">Restie</div>
-    <div class="header-row">
-      <span class="header-title" style="font-size:16px">개선 제안</span>
-    </div>
+  <header class="app-header pp-header">
+    <div class="pp-brand">Restie</div>
     <div class="subtab-row" role="tablist" aria-label="제안 유형">
       <button class="subtab active" type="button" role="tab" aria-selected="true" data-mode="comfort">불편 개선</button>
       <button class="subtab" type="button" role="tab" aria-selected="false" data-mode="info">정보 수정</button>
@@ -27,8 +24,8 @@
     <section class="sec-card pf-step" aria-labelledby="step1-title">
       <div class="section-title" id="step1-title"><span class="pf-num">1</span>어느 화장실인가요?</div>
       <div class="pf-grid">
-        <label class="field"><span>지역</span><select id="area-select"></select></label>
-        <label class="field"><span>화장실 <b id="area-count" style="font-weight:400"></b></span><select id="toilet-select"></select></label>
+        <select class="pp-select" id="area-select" aria-label="지역"></select>
+        <select class="pp-select" id="toilet-select" aria-label="화장실"></select>
       </div>
       <div id="place-card"></div>
     </section>
@@ -36,14 +33,13 @@
     <!-- ===== 불편 개선 ===== -->
     <section class="sec-card pf-step mode-comfort" aria-labelledby="c2-title">
       <div class="section-title" id="c2-title"><span class="pf-num">2</span>누가 이용하나요?</div>
-      <p class="sec-sub">이용 상황을 고르면 이 화장실에서 막힐 수 있는 지점을 공공데이터로 확인해 드려요.</p>
       <div class="pf-chips" id="persona-chips" role="radiogroup" aria-label="이용 상황"></div>
       <div id="persona-check" aria-live="polite"></div>
     </section>
 
     <section class="sec-card pf-step mode-comfort" aria-labelledby="c3-title">
       <div class="section-title" id="c3-title"><span class="pf-num">3</span>어떻게 바뀌면 좋을까요?</div>
-      <p class="sec-sub">등록되지 않은 항목에 맞는 개선안에 <b style="color:var(--accent)">추천</b>을 표시했어요. 필요한 것을 모두 골라 주세요.</p>
+      <p class="sec-sub" id="idea-sub" hidden>등록되지 않은 항목에 맞는 개선안에 <b class="pp-rec-word">추천</b>을 표시했어요. 필요한 것을 모두 골라 주세요.</p>
       <div class="pf-chips" id="idea-chips" role="group" aria-label="개선 아이디어"></div>
       <div id="idea-compare" aria-live="polite"></div>
     </section>
@@ -53,16 +49,19 @@
       <label class="field"><span>제안 내용 · 고른 내용으로 자동 작성돼요. 직접 고쳐도 돼요.</span>
         <textarea id="comfort-text" rows="8"></textarea>
       </label>
-      <label class="pf-photo" for="comfort-photo">
-        <input id="comfort-photo" type="file" accept="image/*" capture="environment" hidden>
-        <span id="comfort-photo-prompt">📷 현장 사진 첨부 (선택)</span>
-        <img id="comfort-photo-img" alt="첨부한 현장 사진" hidden>
-      </label>
-      <button type="button" class="pf-photo-remove" id="comfort-photo-remove" hidden>사진 삭제</button>
+    </section>
+
+    <section class="sec-card pf-step mode-comfort" aria-labelledby="c5-title">
+      <div class="section-title" id="c5-title"><span class="pf-num">5</span>사진 첨부 (선택)</div>
+      <input id="comfort-photo" type="file" accept="image/*" hidden>
+      <div class="pp-photos" id="comfort-photos"></div>
       <p class="dash-note">얼굴이나 개인정보가 보이는 사진은 첨부하지 마세요. 이 버전에서는 사진 자체는 저장하지 않고 첨부 여부만 기록해요.</p>
+    </section>
+
+    <div class="pp-submit mode-comfort">
       <p class="form-error" id="comfort-error" role="alert" hidden></p>
       <button type="button" class="btn-primary" id="comfort-submit">개선 제안 제출하기</button>
-    </section>
+    </div>
 
     <!-- ===== 정보 수정 ===== -->
     <section class="sec-card pf-step mode-info" aria-labelledby="i2-title" hidden>
@@ -79,16 +78,20 @@
     <section class="sec-card pf-step mode-info" aria-labelledby="i4-title" hidden>
       <div class="section-title" id="i4-title"><span class="pf-num">4</span>언제 확인했나요?</div>
       <label class="field"><span>확인한 날짜</span><input id="info-date" type="date"></label>
-      <label class="pf-photo" for="info-photo">
-        <input id="info-photo" type="file" accept="image/*" capture="environment" hidden>
-        <span id="info-photo-prompt">📷 확인 사진 첨부 (선택)</span>
-        <img id="info-photo-img" alt="첨부한 확인 사진" hidden>
-      </label>
-      <button type="button" class="pf-photo-remove" id="info-photo-remove" hidden>사진 삭제</button>
-      <p class="dash-note">담당자가 확인하기 전까지는 공식 정보로 표시되지 않아요. 사람이 보이는 사진은 첨부하지 마세요.</p>
+      <p class="dash-note">담당자가 확인하기 전까지는 공식 정보로 표시되지 않아요.</p>
+    </section>
+
+    <section class="sec-card pf-step mode-info" aria-labelledby="i5-title" hidden>
+      <div class="section-title" id="i5-title"><span class="pf-num">5</span>사진 첨부 (선택)</div>
+      <input id="info-photo" type="file" accept="image/*" hidden>
+      <div class="pp-photos" id="info-photos"></div>
+      <p class="dash-note">사람이 보이는 사진은 첨부하지 마세요. 이 버전에서는 사진 자체는 저장하지 않고 첨부 여부만 기록해요.</p>
+    </section>
+
+    <div class="pp-submit mode-info" hidden>
       <p class="form-error" id="info-error" role="alert" hidden></p>
       <button type="button" class="btn-primary" id="info-submit">정보 수정 제안 제출하기</button>
-    </section>
+    </div>
 
     <p class="dash-note">※ 데모 버전이라 제안은 이 브라우저에만 저장돼요. 실서비스에서는 위치·사진 제보 동의, 검토 절차, 허위 제보 대응, 개인정보 보호 기준을 따로 마련해야 합니다.</p>
 
@@ -102,6 +105,7 @@
 
   <nav class="app-tabbar" id="tabbar-root" aria-label="주요 메뉴"></nav>
 </div>
+<div class="snack" id="snack" role="status" aria-live="polite"></div>
 
 <script src="../js/app.js"></script>
 <script>
@@ -140,14 +144,14 @@
     clean:    { label: "청소·위생용품 비치", after: "깨끗하고 필요한 용품이 있어 편하게 써요." },
   };
   const CHECK_TO_IDEA = { stepfree: "ramp", diaper: "diaper", child: "childSeat", bell: "bell", cctv: "cctv", h24: "hours" };
-  /* 이용 상황 (대시보드의 사용자 유형과 같은 아이콘·이름) */
+  /* 이용 상황 (버튼에는 이름만 표시) */
   const PERSONAS = {
-    wheel:  { ico: "♿", name: "휠체어·보행보조", checks: ["stepfree", "bell"], ideas: ["ramp", "route", "door", "handrail", "bell", "sign"] },
-    infant: { ico: "👶", name: "영유아 동반 보호자", checks: ["diaper", "child", "stepfree"], ideas: ["diaper", "diaperM", "childSeat", "ramp", "sign"] },
-    safe:   { ico: "🌙", name: "야간 귀가자·여성", checks: ["bell", "cctv", "h24"], ideas: ["bell", "cctv", "light", "camCheck", "hours"] },
-    senior: { ico: "🤰", name: "임산부·노약자", checks: ["stepfree", "bell"], ideas: ["ramp", "handrail", "seat", "bell", "sign"] },
-    urgent: { ico: "⏱️", name: "급한 이용 수요", checks: ["h24"], ideas: ["hours", "sign", "route"] },
-    etc:    { ico: "💬", name: "기타 이용자", checks: [], ideas: ["clean", "sign", "light", "hours"] },
+    wheel:  { name: "휠체어·보행보조", checks: ["stepfree", "bell"], ideas: ["ramp", "route", "door", "handrail", "bell", "sign"] },
+    infant: { name: "영유아 동반 보호자", checks: ["diaper", "child", "stepfree"], ideas: ["diaper", "diaperM", "childSeat", "ramp", "sign"] },
+    safe:   { name: "야간 귀가자·여성", checks: ["bell", "cctv", "h24"], ideas: ["bell", "cctv", "light", "camCheck", "hours"] },
+    senior: { name: "임산부·노약자", checks: ["stepfree", "bell"], ideas: ["ramp", "handrail", "seat", "bell", "sign"] },
+    urgent: { name: "급한 이용 수요", checks: ["h24"], ideas: ["hours", "sign", "route"] },
+    etc:    { name: "기타 이용자", checks: [], ideas: ["clean", "sign", "light", "hours"] },
   };
   /* 정보 수정 항목 */
   const INFO_ITEMS = {
@@ -177,6 +181,9 @@
   let toilets = [];
   let mode = params.get("mode") === "info" ? "info" : "comfort";
   let area = "all", toiletId = null;
+  /* 마이페이지에서 정한 내 이용 상황 (선택은 이용자가 직접 하고, 표시만 해 줌) */
+  let myPersona = null;
+  try { const m = localStorage.getItem("pt_my_persona"); if (m && PERSONAS[m]) myPersona = m; } catch {}
   let persona = null, ideas = new Set(), textEdited = false;
   let infoItem = INFO_ITEMS[params.get("item")] ? params.get("item") : null, infoActual = "";
   const photo = { comfort: false, info: false };
@@ -188,7 +195,7 @@
     toilets = await App.loadToilets();
   } catch (err) {
     console.error(err);
-    document.querySelectorAll(".pf-step").forEach((s) => (s.hidden = true));
+    document.querySelectorAll(".pf-step, .pp-submit").forEach((s) => (s.hidden = true));
     $("error-state").hidden = false;
     return;
   }
@@ -202,7 +209,6 @@
   function fillToilets() {
     const list = toilets.filter((t) => area === "all" || (t.area || "기타") === area)
       .sort((a, b) => a.name.localeCompare(b.name, "ko"));
-    $("area-count").textContent = `${list.length}곳`;
     toiletSel.innerHTML = `<option value="">화장실을 골라 주세요</option>` +
       list.map((t) => `<option value="${t.id}">${esc(t.name)}${t.source === "api" ? " [A]" : ""}</option>`).join("");
     if (toiletId && list.some((t) => t.id === toiletId)) toiletSel.value = toiletId;
@@ -217,9 +223,10 @@
     renderAll();
   }
 
+  /* 화장실을 고르면 그 화장실 카드가 나타난다 (고르기 전에는 아무것도 표시하지 않음) */
   function renderPlace() {
     const t = current(), box = $("place-card");
-    if (!t) { box.innerHTML = `<div class="pf-empty">지역과 화장실을 고르면 등록된 정보를 보여 드려요.</div>`; return; }
+    if (!t) { box.innerHTML = ""; return; }
     const badges = App.badgesOf(t);
     box.innerHTML = `
       <div class="pf-place">
@@ -252,14 +259,16 @@
 
   function renderComfort() {
     $("persona-chips").innerHTML = Object.entries(PERSONAS).map(([k, p]) =>
-      `<button type="button" class="chip${persona === k ? " active" : ""}" role="radio" aria-checked="${persona === k}" data-p="${k}">${p.ico} ${p.name}</button>`).join("");
+      `<button type="button" class="chip${persona === k ? " active" : ""}" role="radio" aria-checked="${persona === k}" data-p="${k}">${p.name}${k === myPersona ? '<span class="rec">★ 내 설정</span>' : ""}</button>`).join("");
 
     const t = current(), p = PERSONAS[persona];
     const check = $("persona-check"), ideaEl = $("idea-chips"), cmp = $("idea-compare");
+    /* 화장실과 이용 상황을 모두 고르기 전에는 결과 영역을 비워 둔다 */
     if (!t || !p) {
-      check.innerHTML = `<div class="pf-empty">${!t ? "1단계에서 화장실을 먼저 골라 주세요." : "이용 상황을 골라 주세요."}</div>`;
-      ideaEl.innerHTML = `<div class="pf-empty" style="width:100%">2단계까지 고르면 개선안이 나타나요.</div>`;
+      check.innerHTML = "";
+      ideaEl.innerHTML = "";
       cmp.innerHTML = "";
+      $("idea-sub").hidden = true;
       updateText();
       return;
     }
@@ -269,9 +278,11 @@
       : `<p class="pf-summary">${bad ? `${p.name}에게 막힐 수 있는 지점이 ${bad}곳 있어요` : `${p.name}에게 필요한 정보가 모두 등록돼 있어요`}</p>` +
         issues.map((x) => `<div class="pf-issue ${x.ok ? "ok" : "warn"}" style="margin-top:6px"><b aria-hidden="true">${x.ok ? "✓" : "!"}</b><span>${esc(x.text)}</span></div>`).join("");
 
+    /* 추천 개선안: '추천' 글자 대신 파란 테두리(#00B3FF)로 표시 */
     const rec = recommended();
+    $("idea-sub").hidden = false;
     ideaEl.innerHTML = p.ideas.map((k) =>
-      `<button type="button" class="chip${ideas.has(k) ? " active" : ""}" aria-pressed="${ideas.has(k)}" data-idea="${k}">${IDEAS[k].label}${rec.has(k) ? `<span class="rec">추천</span>` : ""}</button>`).join("");
+      `<button type="button" class="chip${ideas.has(k) ? " active" : ""}${rec.has(k) ? " is-rec" : ""}" aria-pressed="${ideas.has(k)}" data-idea="${k}"${rec.has(k) ? ' aria-description="추천"' : ""}>${IDEAS[k].label}</button>`).join("");
     const before = issues.filter((x) => !x.ok).map((x) => x.text);
     const after = [...ideas].map((k) => IDEAS[k].after);
     cmp.innerHTML = `
@@ -310,13 +321,52 @@
     textEl.value = `[대상] ${t.name} (${t.area})\n[이용 상황] ${p.name}\n[현재 불편]\n${issues.join("\n") || "- 현장에서 겪은 불편을 적어 주세요."}\n[개선 요청]\n${list.join("\n") || "- "}\n[덧붙이는 말] `;
   }
 
+  /* ⑤ 사진 첨부 (불편 개선·정보 수정 공통)
+     가운데 큰 진한 회색 + 칸, 양옆 조금 작은 연한 회색 + 칸.
+     어느 칸을 눌러도 사진 고르기 창이 열리고, 가운데 → 왼쪽 → 오른쪽 순서로 채워진다 (최대 3장, 미리보기만) */
+  const MAX_PHOTOS = 3;
+  const SLOT_ORDER = [1, 0, 2];    // 화면 왼쪽부터 그릴 때 각 칸에 들어갈 사진 번호 (0번 = 가운데)
+  const PLUS = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>`;
+  const photos = { comfort: [], info: [] };
+  const photoRender = {};
+  function setupPhotos(kind) {
+    const list = photos[kind], input = $(`${kind}-photo`), box = $(`${kind}-photos`);
+    function render() {
+      box.innerHTML = SLOT_ORDER.map((i) => {
+        const pos = i === 0 ? "is-main" : "is-side";
+        const src = list[i];
+        return src
+          ? `<div class="pp-slot pp-thumb ${pos}"><img src="${src}" alt="첨부한 사진 ${i + 1}">
+               <button type="button" class="pp-del" data-del="${i}" aria-label="사진 ${i + 1} 삭제">✕</button></div>`
+          : `<button type="button" class="pp-slot pp-add ${pos}" data-add aria-label="사진 추가">${PLUS}</button>`;
+      }).join("");
+      photo[kind] = list.length > 0;
+    }
+    box.addEventListener("click", (e) => {
+      const del = e.target.closest("[data-del]");
+      if (del) { list.splice(Number(del.dataset.del), 1); render(); return; }
+      if (e.target.closest("[data-add]")) input.click();
+    });
+    input.addEventListener("change", () => {
+      const file = input.files && input.files[0];
+      input.value = "";
+      if (!file || list.length >= MAX_PHOTOS) return;
+      const r = new FileReader();
+      r.onload = () => { list.push(r.result); render(); };
+      r.readAsDataURL(file);
+    });
+    render();
+    photoRender[kind] = render;
+  }
+  setupPhotos("comfort");
+  setupPhotos("info");
+
   /* ---------- 정보 수정 ---------- */
   function renderInfo() {
     $("info-items").innerHTML = Object.entries(INFO_ITEMS).map(([k, v]) =>
       `<button type="button" class="chip${infoItem === k ? " active" : ""}" role="radio" aria-checked="${infoItem === k}" data-item="${k}">${v.label}</button>`).join("");
     const t = current(), box = $("info-input");
-    if (!t) { box.innerHTML = `<div class="pf-empty">1단계에서 화장실을 먼저 골라 주세요.</div>`; return; }
-    if (!infoItem) { box.innerHTML = `<div class="pf-empty">2단계에서 고칠 항목을 골라 주세요.</div>`; return; }
+    if (!t || !infoItem) { box.innerHTML = ""; return; }   // 화장실과 항목을 모두 고르면 입력란이 나타남
     const it = INFO_ITEMS[infoItem], cur = currentValue(t, infoItem);
     let html = "";
     if (cur !== null) html += `<div class="pf-current"><span>현재 등록된 정보</span><b class="${cur ? "" : "none"}">${esc(cur || "정보 없음")}</b></div><div class="pf-arrow" aria-hidden="true">↓</div>`;
@@ -351,21 +401,6 @@
   $("info-date").value = today();
   $("info-date").max = today();
 
-  /* ---------- 사진 첨부 (미리보기만) ---------- */
-  function setupPhoto(kind) {
-    const input = $(`${kind}-photo`), img = $(`${kind}-photo-img`), prompt = $(`${kind}-photo-prompt`), rm = $(`${kind}-photo-remove`);
-    input.addEventListener("change", () => {
-      const file = input.files && input.files[0];
-      if (!file) return;
-      const r = new FileReader();
-      r.onload = () => { img.src = r.result; img.hidden = false; prompt.hidden = true; rm.hidden = false; photo[kind] = true; };
-      r.readAsDataURL(file);
-    });
-    rm.addEventListener("click", () => { img.hidden = true; img.removeAttribute("src"); input.value = ""; prompt.hidden = false; rm.hidden = true; photo[kind] = false; });
-  }
-  setupPhoto("comfort");
-  setupPhoto("info");
-
   /* ---------- 오류 표시 ---------- */
   function showError(kind, msg, focusEl) {
     const el = $(`${kind}-error`);
@@ -374,10 +409,28 @@
   }
   const hideError = (kind) => { $(`${kind}-error`).hidden = true; };
 
-  /* ---------- 제출 ---------- */
+  /* ---------- 제출: 페이지를 옮기지 않고 안내만 띄운 뒤 입력을 비움 ---------- */
+  let snackTimer = null;
+  function snack(msg) {
+    const el = $("snack");
+    el.textContent = msg;
+    el.classList.add("show");
+    clearTimeout(snackTimer);
+    snackTimer = setTimeout(() => el.classList.remove("show"), 2600);
+  }
+  function resetForm() {
+    area = "all"; toiletId = null; areaSel.value = "all"; fillToilets();
+    persona = null; ideas = new Set(); textEdited = false; textEl.value = "";
+    infoItem = null; infoActual = ""; $("info-date").value = today();
+    ["comfort", "info"].forEach((k) => { photos[k].length = 0; photoRender[k](); });
+    hideError("comfort"); hideError("info");
+    renderAll();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
   function done(item) {
     if (!item) { alert("저장 공간이 부족해 제안을 저장하지 못했어요."); return; }
-    location.href = "./mypage.html?tab=proposals&submitted=1";
+    resetForm();
+    snack("제안을 제출했어요. 마이페이지에서 확인할 수 있어요");
   }
   $("comfort-submit").addEventListener("click", () => {
     const t = current();
@@ -390,7 +443,7 @@
     done(App.Proposals.add({
       kind: "comfort", toiletId: t.id, toiletName: t.name, area: t.area,
       title: `${t.name} · ${list[0]}${list.length > 1 ? ` 외 ${list.length - 1}건` : ""}`,
-      persona: PERSONAS[persona].name, ideas: list, body, hasPhoto: photo.comfort,
+      persona: PERSONAS[persona].name, ideas: list, body, hasPhoto: photo.comfort, photoCount: photos.comfort.length,
     }));
   });
   $("info-submit").addEventListener("click", () => {
@@ -413,7 +466,7 @@
     done(App.Proposals.add({
       kind: "info", toiletId: t.id, toiletName: t.name, area: t.area,
       title: `${t.name} · ${it.label} ${it.type === "issue" ? "제보" : "정보 수정"}`,
-      item: it.label, current: cur === null ? "" : (cur || "정보 없음"), actual, checkedDate, hasPhoto: photo.info,
+      item: it.label, current: cur === null ? "" : (cur || "정보 없음"), actual, checkedDate, hasPhoto: photo.info, photoCount: photos.info.length,
       body: [cur !== null && `현재: ${cur || "정보 없음"}`, `실제: ${actual}`, `확인일: ${checkedDate}`, memo && `설명: ${memo}`].filter(Boolean).join("\n"),
     }));
   });

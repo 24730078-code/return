@@ -211,11 +211,11 @@ const App = (() => {
   function srcTag(t) {
     return t.source === "api"
       ? `<span class="src-tag src-a" title="서울시 API (지하철 역사 화장실)">A</span>`
-      : `<span class="src-tag src-j" title="공공데이터 JSON">J</span>`;
+      : `<span class="src-tag src-j" title="공공데이터 JSON" style="background:#E3F6EA;color:#188A45">J</span>`;
   }
   /* 남/여 아이콘 (남=파랑, 여=분홍) */
-  const MALE_ICON = `<svg class="gi gi-m" viewBox="0 0 24 24" role="img" aria-label="남자"><circle cx="12" cy="5" r="3"/><path d="M8 10h8a1 1 0 0 1 1 1v6h-2v5h-3v-5h-2v5H9v-5H7v-6a1 1 0 0 1 1-1z"/></svg>`;
-  const FEMALE_ICON = `<svg class="gi gi-f" viewBox="0 0 24 24" role="img" aria-label="여자"><circle cx="12" cy="5" r="3"/><path d="M12 9c1.5 0 2.4.8 2.8 2L18 19h-3v3h-2v-3h-2v3H9v-3H6l3.2-8c.4-1.2 1.3-2 2.8-2z"/></svg>`;
+  const MALE_ICON = `<svg class="gi gi-m" viewBox="0 0 24 24" role="img" aria-label="남자"><circle cx="12" cy="2.3" r="2.25"/><rect x="7.25" y="5" width="9.5" height="3.6" rx="1.8"/><rect x="7.25" y="6" width="1.85" height="8.6" rx="0.92"/><rect x="14.9" y="6" width="1.85" height="8.6" rx="0.92"/><rect x="9.55" y="6" width="4.9" height="9" rx="0.6"/><rect x="9.55" y="12" width="2.25" height="12" rx="1.12"/><rect x="12.2" y="12" width="2.25" height="12" rx="1.12"/></svg>`;
+  const FEMALE_ICON = `<svg class="gi gi-f" viewBox="0 0 24 24" role="img" aria-label="여자"><circle cx="12" cy="2.3" r="2.25"/><path d="M9.6 5h4.8c1 0 1.5.5 1.6 1.4l-.9 3 1.6 7.3H7.3l1.6-7.3-.9-3C8.1 5.5 8.6 5 9.6 5z"/><path d="M8.2 6.2 6.5 13.2M15.8 6.2l1.7 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" fill="none"/><rect x="9.85" y="15.5" width="1.9" height="8.5" rx="0.95"/><rect x="12.25" y="15.5" width="1.9" height="8.5" rx="0.95"/></svg>`;
   /* "남자화장실+여자화장실" 같은 위치 문구 → 아이콘 + 점 구분 */
   function placeHtml(str) {
     if (!str) return "";
@@ -231,6 +231,39 @@ const App = (() => {
   /* 카드에 쓰는 '지역 · 도보 N분' 문구 (좌표를 아직 모르면 지역만 표시) */
   function distLabel(t) {
     return t.distanceM == null ? `${t.area || ""}` : `${t.area || ""} · 도보 ${Math.max(1, Math.round(t.distanceM / 70))}분`;
+  }
+
+  /* ---------- 화장실 이미지 (data/toilet_images_sample.json) ----------
+     장소 유형(지하철역·지하상가·공원·공공기관·기타)별 이미지 + 시설(장애인용 칸·기저귀 교환대) 이미지.
+     loadImageRules()로 한 번 불러온 뒤 imagesOf(t)로 [{ src, alt }]를 받습니다. 실패하면 빈 배열. */
+  const IMAGE_URL = IN_PAGES ? "../data/toilet_images_sample.json" : "./data/toilet_images_sample.json";
+  let imageRules = null, imageLoading = null;
+  function loadImageRules() {
+    if (!imageLoading) {
+      imageLoading = fetch(IMAGE_URL)
+        .then((res) => { if (!res.ok) throw new Error("HTTP " + res.status); return res.json(); })
+        .then((d) => (imageRules = d))
+        .catch((err) => { console.warn("[App] 화장실 이미지 데이터를 불러오지 못했습니다:", err.message || err); imageRules = null; });
+    }
+    return imageLoading;
+  }
+  function placeTypeOf(t) {
+    if (!imageRules) return null;
+    return imageRules.placeTypes.find((p) => {
+      const m = p.match || {};
+      if (!m.source && !m.nameRegex) return true;                    // '기타' (마지막)
+      return (m.source && t.source === m.source) || (m.nameRegex && new RegExp(m.nameRegex).test(t.name || ""));
+    }) || null;
+  }
+  function imagesOf(t) {
+    const type = placeTypeOf(t);
+    if (!type) return [];
+    const keys = [...type.images];
+    (imageRules.facilityImages || []).forEach((f) => { if (t[f.key] && !keys.includes(f.image)) keys.push(f.image); });
+    return keys.slice(0, imageRules.maxImages || 4)
+      .map((k) => imageRules.images[k])
+      .filter(Boolean)
+      .map((img) => ({ src: (IN_PAGES ? "../" : "./") + img.src, alt: img.alt }));
   }
 
   /* ---------- LocalStorage ---------- */
@@ -332,11 +365,72 @@ const App = (() => {
      status: "pending"(검토 대기) | "done"(반영 완료) | "rejected"(반려)
      실제 서비스에서는 서버에 저장하고 담당자가 검토 상태를 바꿔야 합니다. */
   const PROPOSAL_KEY = "pt_proposals";
+
+  /* ---------- 시연용 샘플 제안 ----------
+     data/proposals_sample.json을 처음 접속할 때 한 번만 읽어 저장소에 넣습니다 (sample: true로 표시).
+     JSON의 daysAgo·reviewedDaysAgo·checkedDate는 '접속한 날 기준 며칠 전'이라 언제 열어도 최근 제안처럼 보입니다.
+     지운 뒤에도 다시 생기지 않도록 SEED_KEY로 기록합니다.
+     샘플을 처음 상태로 다시 넣고 싶으면 브라우저 콘솔에서 App.Proposals.resetSamples() 실행. */
+  const SEED_KEY = "pt_proposals_seeded_v3";   // 샘플 JSON을 바꾸면 v4, v5…로 올리면 다음 접속 때 자동으로 새 샘플로 교체
+  const SAMPLE_URL = IN_PAGES ? "../data/proposals_sample.json" : "./data/proposals_sample.json";
+  const DAY = 86400000;
+  const fmtDay = (ts) => new Date(ts).toISOString().slice(0, 10);
+  function buildSample(s, now) {
+    const createdAt = now - s.daysAgo * DAY;
+    const base = {
+      id: s.id, sample: true, createdAt, status: s.status, author: "샘플",
+      kind: s.kind, toiletId: s.toiletId, toiletName: s.toiletName, area: s.area,
+      hasPhoto: false, photoCount: 0,
+    };
+    if (s.facility) base.facility = s.facility;     // 어떤 시설에 대한 제안인지 (추천순 1순위 계산용)
+    if (s.reviewedDaysAgo != null) base.reviewedAt = fmtDay(now - s.reviewedDaysAgo * DAY);
+    if (s.review) base.memo = s.review;
+    if (s.kind === "comfort") {
+      return {
+        ...base,
+        title: `${s.toiletName} · ${s.ideas[0]}${s.ideas.length > 1 ? ` 외 ${s.ideas.length - 1}건` : ""}`,
+        persona: s.persona, ideas: s.ideas,
+        body: `[대상] ${s.toiletName} (${s.area})\n[이용 상황] ${s.persona}\n[개선 요청]\n${s.ideas.map((x) => "- " + x).join("\n")}\n[덧붙이는 말] ${s.text}`,
+      };
+    }
+    const checkedDate = fmtDay(now + s.checkedDate * DAY);
+    const isIssue = s.item === "청소·고장";
+    return {
+      ...base,
+      title: `${s.toiletName} · ${s.item} ${isIssue ? "제보" : "정보 수정"}`,
+      item: s.item, current: s.current, actual: s.actual, checkedDate,
+      body: [!isIssue && `현재: ${s.current || "정보 없음"}`, `실제: ${s.actual}`, `확인일: ${checkedDate}`, s.memo && `설명: ${s.memo}`].filter(Boolean).join("\n"),
+    };
+  }
+
   const Proposals = (() => {
     const STATUS = { pending: "검토 대기", done: "반영 완료", rejected: "반려" };
     const KIND = { comfort: "불편 개선", info: "정보 수정" };
-    const list = () => { try { return JSON.parse(localStorage.getItem(PROPOSAL_KEY)) || []; } catch { return []; } };
+    const readRaw = () => { try { return JSON.parse(localStorage.getItem(PROPOSAL_KEY)) || []; } catch { return []; } };
     const write = (all) => { try { localStorage.setItem(PROPOSAL_KEY, JSON.stringify(all)); return true; } catch { return false; } };
+    /* 샘플 넣기 (fetch가 필요해서 비동기). 실패해도 앱은 그대로 동작 */
+    let seeding = null;
+    function seedSamples(force) {
+      if (!force && seeding) return seeding;
+      seeding = (async () => {
+        try {
+          if (!force && localStorage.getItem(SEED_KEY)) return;
+          const res = await fetch(SAMPLE_URL);
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          const raw = await res.json();
+          const now = Date.now();
+          const mine = readRaw().filter((p) => !p.sample);            // 사용자가 쓴 제안은 그대로 둠
+          const all = mine.concat(raw.map((s) => buildSample(s, now))).sort((a, b) => b.createdAt - a.createdAt);
+          if (write(all)) localStorage.setItem(SEED_KEY, "1");
+        } catch (err) {
+          console.warn("[App] 샘플 개선 제안(data/proposals_sample.json)을 불러오지 못했습니다:", err.message || err);
+        }
+      })();
+      return seeding;
+    }
+    /* 샘플이 저장소에 들어갈 때까지 기다릴 때 사용 (예: 추천순 계산 전) */
+    const ready = () => seedSamples(false);
+    const list = () => readRaw();
     function add(p) {
       const user = Auth.currentUser();
       const item = {
@@ -348,7 +442,20 @@ const App = (() => {
       return write(all) ? item : null;
     }
     function remove(id) { write(list().filter((p) => p.id !== id)); }
-    return { list, add, remove, STATUS, KIND };
+    /* 검토 상태·메모 변경 (관리자 모드 데모용) */
+    function update(id, patch) {
+      const all = list();
+      const item = all.find((p) => p.id === id);
+      if (!item) return null;
+      Object.assign(item, patch);
+      Object.keys(item).forEach((k) => item[k] === undefined && delete item[k]);
+      return write(all) ? item : null;
+    }
+    function clear() { write([]); }
+    /* 샘플 제안만 처음 상태로 다시 넣기 (사용자가 쓴 제안은 유지) */
+    function resetSamples() { return seedSamples(true); }
+    seedSamples(false);   // 어느 화면이든 처음 열리면 바로 샘플을 넣기 시작
+    return { list, ready, add, remove, update, clear, resetSamples, STATUS, KIND };
   })();
 
   /* HTML 이스케이프 (사용자 입력·데이터를 innerHTML에 넣을 때) */
@@ -359,22 +466,22 @@ const App = (() => {
     if (!mountEl) return;
     const svg = (inner) =>
       `<span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24">${inner}</svg></span>`;
-    const ICON_MAP = svg('<path d="M9 4 3 6.5V20l6-2.5 6 2.5 6-2.5V4l-6 2.5z"/><path d="M9 4v13.5M15 6.5V20"/>');
+    const ICON_MAP = svg('<path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/>');
     const ICON_DASH = svg('<rect x="3" y="12" width="4" height="9" rx="1"/><rect x="10" y="3" width="4" height="18" rx="1"/><rect x="17" y="8" width="4" height="13" rx="1"/>');
     const ICON_MY = svg('<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/>');
     const ICON_PROPOSE = svg('<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>');
     mountEl.innerHTML = `
       <a class="tab${active === "home" ? " active" : ""}" href="${HOME_URL}">
-        ${ICON_MAP}지도
-      </a>
-      <a class="tab${active === "dashboard" ? " active" : ""}" href="${pageUrl("dashboard.html")}">
-        ${ICON_DASH}개선 보드
+        ${ICON_MAP}Restie
       </a>
       <a class="tab${active === "propose" ? " active" : ""}" href="${pageUrl("propose.html")}">
         ${ICON_PROPOSE}개선 제안
       </a>
+      <a class="tab${active === "dashboard" ? " active" : ""}" href="${pageUrl("dashboard.html")}">
+        ${ICON_DASH}개선 보드
+      </a>
       <a class="tab${active === "my" ? " active" : ""}" href="${pageUrl("mypage.html")}">
-        ${ICON_MY}마이
+        ${ICON_MY}마이페이지
       </a>
     `;
   }
@@ -417,6 +524,7 @@ const App = (() => {
   return {
     IN_PAGES, pageUrl, HOME_URL,
     loadToilets, distLabel, GEO, dataStatus, srcTag, placeHtml, MALE_ICON, FEMALE_ICON,
+    loadImageRules, imagesOf,
     getFavorites, isFavorite, toggleFavorite,
     getRecent, addRecent, relativeTime,
     badgesOf, isOpenNow,

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" role="img" aria-label="공공기관 건물 안 화장실 입구 복도">
+  <rect width="640" height="480" fill="#F2F8FC"/>
+  <rect width="640" height="70" fill="#E3F1FA"/>
+  <g fill="#FFFFFF"><rect x="80" y="28" width="120" height="12" rx="6"/><rect x="260" y="28" width="120" height="12" rx="6"/><rect x="440" y="28" width="120" height="12" rx="6"/></g>
+  <!-- 벽 -->
+  <rect y="70" width="640" height="300" fill="#F7FBFE"/>
+  <rect y="290" width="640" height="80" fill="#E3F1FA"/>
+  <!-- 문 2개 -->
+  <rect x="120" y="140" width="150" height="230" rx="4" fill="#D6ECF8" stroke="#9FCFEA" stroke-width="4"/>
+  <rect x="370" y="140" width="150" height="230" rx="4" fill="#D6ECF8" stroke="#9FCFEA" stroke-width="4"/>
+  <rect x="245" y="250" width="8" height="40" rx="4" fill="#5F8EA8"/>
+  <rect x="387" y="250" width="8" height="40" rx="4" fill="#5F8EA8"/>
+  <!-- 문 표지 (글자) -->
+  <rect x="160" y="160" width="70" height="34" rx="6" fill="#4A93C2"/>
+  <text x="195" y="183" font-family="Pretendard, sans-serif" font-size="16" font-weight="700" fill="#FFFFFF" text-anchor="middle">남</text>
+  <rect x="410" y="160" width="70" height="34" rx="6" fill="#E58C9E"/>
+  <text x="445" y="183" font-family="Pretendard, sans-serif" font-size="16" font-weight="700" fill="#FFFFFF" text-anchor="middle">여</text>
+  <!-- 가운데 안내판 + 화분 -->
+  <rect x="285" y="120" width="70" height="30" rx="6" fill="#2F5873"/>
+  <text x="320" y="141" font-family="Pretendard, sans-serif" font-size="14" font-weight="700" fill="#FFFFFF" text-anchor="middle">화장실</text>
+  <rect x="300" y="320" width="40" height="50" rx="6" fill="#9FCFEA"/>
+  <circle cx="320" cy="300" r="26" fill="#8CC9E8"/><circle cx="305" cy="285" r="16" fill="#9FD3EE"/><circle cx="337" cy="288" r="16" fill="#9FD3EE"/>
+  <!-- 바닥 -->
+  <rect y="370" width="640" height="110" fill="#DCEBF5"/>
+  <g stroke="#CDE2EF" stroke-width="2"><path d="M0 420 H640 M100 370 L60 480 M320 370 V480 M540 370 L580 480"/></g>
+</svg>
