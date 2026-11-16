@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Restie">
+  <!-- Restie 앱 아이콘: 파란 둥근 사각형 + 흰 위치핀 테두리 + 물방울 -->
+  <rect width="1024" height="1024" rx="200" fill="#00B3FF"/>
+  <path d="M512 916C340 818 191 640 191 430a321 321 0 0 1 642 0c0 210-149 388-321 486z" fill="none" stroke="#fff" stroke-width="42" stroke-linejoin="round"/>
+  <path d="M512 265C450 335 353 410 353 520a159 159 0 0 0 318 0c0-110-97-185-159-255z" fill="#fff"/>
+  <path d="M405 518c4 52 45 102 85 106" fill="none" stroke="#00B3FF" stroke-width="44" stroke-linecap="round"/>
+</svg>
