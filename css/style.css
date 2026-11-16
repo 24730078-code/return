@@ -1379,7 +1379,7 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
   top: 0;
   z-index: 30;
   background: #fff;
-  border-bottom: 1px solid var(--line);
+  border-bottom: none;
 }
 /* 헤더 한 줄: 왼쪽 로고(아이콘 + Restie) / 오른쪽 로그인 버튼 또는 회원명 */
 .pp-brand {
