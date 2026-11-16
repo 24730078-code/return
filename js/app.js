@@ -7,6 +7,7 @@ const App = (() => {
   const IN_PAGES = location.pathname.includes("/pages/");
   const DATA_URL = IN_PAGES ? "../data/toilets_seoul_jung.json" : "./data/toilets_seoul_jung.json";
   const HOME_URL = IN_PAGES ? "../index.html" : "./index.html";
+  const LOGO_URL = IN_PAGES ? "../img/logo.svg" : "./img/logo.svg";   // 헤더 로고 아이콘
   const pageUrl = (name) => (IN_PAGES ? `./${name}` : `pages/${name}`);
 
   const FAV_KEY = "pt_favorites";   // 즐겨찾기 id 배열
@@ -461,8 +462,43 @@ const App = (() => {
   /* HTML 이스케이프 (사용자 입력·데이터를 innerHTML에 넣을 때) */
   const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
+  /* ---------- 상단 헤더 (개선 제안 · 개선 보드 · 마이페이지 공통) ----------
+     HTML의 <div class="pp-brand"></div> 안을 채웁니다.
+     왼쪽: 로고 아이콘 + Restie → 누르면 지도(홈) 화면
+     오른쪽: 로그아웃 상태면 '로그인' 버튼, 로그인 상태면 회원명 → 누르면 마이페이지 */
+  function renderHeader(mountEl) {
+    if (!mountEl) return;
+    const user = Auth.currentUser();
+    const right = user
+      ? `<button class="hd-login hd-logout" type="button" data-logout aria-label="로그아웃 (${esc(user.nickname)}님)" title="로그아웃">
+           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/><path d="M21 12H10"/><path d="m17 8 4 4-4 4"/></svg>
+         </button>`   // 로그아웃 아이콘 (문 + 나가는 화살표)
+      : `<a class="hd-login" href="${pageUrl("login.html")}" aria-label="로그인" title="로그인">
+           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M3 12h11"/><path d="m10 8 4 4-4 4"/></svg>
+         </a>`;   // 로그인 아이콘 (문 + 들어가는 화살표)
+    mountEl.innerHTML = `
+      <a class="hd-logo" href="${HOME_URL}" aria-label="Restie 지도 화면으로 이동">
+        <img src="${LOGO_URL}" alt="" width="30" height="30">
+        <span>Restie</span>
+      </a>
+      ${right}`;
+    /* 로그아웃 아이콘을 누르면: 확인 후 로그아웃 → 헤더를 로그인 아이콘으로 바꾸고,
+       화면(예: 마이페이지)이 알 수 있도록 'restie:logout' 이벤트를 보냄 */
+    mountEl.onclick = (e) => {
+      if (!e.target.closest("[data-logout]")) return;
+      if (!confirm("로그아웃할까요?")) return;
+      Auth.logout();
+      renderHeaders();
+      window.dispatchEvent(new Event("restie:logout"));
+    };
+  }
+  const renderHeaders = () => document.querySelectorAll(".pp-brand").forEach(renderHeader);
+  // 로그인하고 '뒤로가기'로 돌아왔을 때(페이지 캐시) 헤더의 로그인 상태를 다시 맞춤
+  window.addEventListener("pageshow", (e) => { if (e.persisted) renderHeaders(); });
+
   /* ---------- 헤더/탭바 ---------- */
   function renderTabbar(mountEl, active) {
+    renderHeaders();   // 탭바가 있는 화면은 상단 헤더도 함께 그림
     if (!mountEl) return;
     const svg = (inner) =>
       `<span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24">${inner}</svg></span>`;
@@ -528,7 +564,7 @@ const App = (() => {
     getFavorites, isFavorite, toggleFavorite,
     getRecent, addRecent, relativeTime,
     badgesOf, isOpenNow,
-    renderTabbar, enableDragScroll,
+    renderTabbar, renderHeader: renderHeaders, enableDragScroll,
     Auth, Proposals, esc,
     countBy, groupByArea,
   };

@@ -20,7 +20,6 @@
       <p class="sec-sub" style="margin:2px 0 10px">핵심 시설 등록 상태와 개선 제안을 모아 먼저 개선할 곳을 찾아요.</p>
       <label class="sr-only" for="board-region">지역 선택</label>
       <select class="pp-select" id="board-region"></select>
-      <p class="board-info" id="board-info" aria-live="polite"></p>
     </section>
 
     <!-- ===== 데이터 요약 ===== -->
@@ -146,7 +145,6 @@
     const ids = new Set(list.map((t) => t.id));
     const label = region === "all" ? "전체 지역" : region;
     const N = list.length;
-    document.getElementById("board-info").innerHTML = `${esc(label)} 화장실 <b>${N}곳</b> 기준`;
     document.getElementById("board-summary-title").textContent = `${label} 데이터 요약`;
 
     // ① 핵심 항목 등록률 = 등록된 항목 수 / (화장실 수 × 항목 수)

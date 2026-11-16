@@ -188,7 +188,13 @@
         </div>
       </div>`;
   }
-  $("logout-btn").addEventListener("click", () => { App.Auth.logout(); renderAccount(); });
+  $("logout-btn").addEventListener("click", () => {
+    App.Auth.logout();
+    renderAccount();
+    App.renderHeader();   // 헤더의 로그아웃 아이콘 → 로그인 아이콘으로
+  });
+  // 헤더의 로그아웃 아이콘으로 로그아웃했을 때도 화면을 로그아웃 상태로 바꿈
+  window.addEventListener("restie:logout", renderAccount);
 
   /* ---------- 즐겨찾기 · 최근 본 화장실 (로그인과 상관없이 이 기기에 저장된 것) ---------- */
   let toiletMap = new Map();
@@ -232,8 +238,12 @@
       : `<p class="my-empty">최근 본 화장실이 없어요.</p>`;
   }
 
-  /* ---------- 제안 목록 ---------- */
+  /* ---------- 제안 목록 ----------
+     처음에는 위에서 2건만 보여 주고, 아래 화살표 버튼을 누르면 나머지를 펼침 (다시 누르면 접힘) */
   const fmtDate = (ts) => new Date(ts).toLocaleDateString("ko-KR");
+  const PROP_SHOW = 2;      // 접혀 있을 때 보여 줄 제안 수
+  let propOpen = false;
+  const CHEVRON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>`;
 
   function renderProposals() {
     const rows = App.Proposals.list();
@@ -260,7 +270,14 @@
       box.innerHTML = `<div class="review-empty">${REVIEW_LABEL[reviewFilter]} 상태인 제안이 없어요.</div>`;
       return;
     }
-    box.innerHTML = list.map((p) => {
+    const shown = propOpen ? list : list.slice(0, PROP_SHOW);
+    const rest = list.length - PROP_SHOW;
+    const moreBtn = rest > 0
+      ? `<button type="button" class="my-more my-more-arrow" id="prop-more" aria-expanded="${propOpen}">
+           ${propOpen ? "접기" : `나머지 ${rest}건 더 보기`}${CHEVRON}
+         </button>`
+      : "";
+    box.innerHTML = shown.map((p) => {
       const status = REVIEW_LABEL[p.status] ? p.status : "pending";
       const meta = `${fmtDate(p.createdAt)} 제출${p.reviewedAt ? ` · ${esc(p.reviewedAt)} ${REVIEW_LABEL[status]}` : ""}`;
       const change = p.kind === "info" && p.actual
@@ -293,10 +310,11 @@
           <p class="review-meta">${meta}${p.hasPhoto ? " · 사진 첨부" : ""}</p>
           ${change}${memo}${actions}
         </article>`;
-    }).join("");
+    }).join("") + moreBtn;
   }
 
   function showList(filter, scroll = true) {
+    if (filter !== reviewFilter) propOpen = false;   // 다른 상태를 고르면 다시 2건만
     reviewFilter = filter;
     renderProposals();
     if (scroll) $("proposal-panel").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -312,6 +330,13 @@
   });
 
   $("saved-proposals").addEventListener("click", (e) => {
+    if (e.target.closest("#prop-more")) {
+      propOpen = !propOpen;
+      renderProposals();
+      // 접을 때는 목록 위쪽으로 돌아가서 화면이 갑자기 아래에 남지 않게
+      if (!propOpen) $("proposal-panel").scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
     const rv = e.target.closest("[data-review]");
     if (rv) {
       const id = rv.dataset.review, to = rv.dataset.to;
